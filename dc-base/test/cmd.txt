@@ -1,0 +1,83 @@
+./build.sh --local --arm
+
+# with persistent DB
+docker-compose -f test/docker-compose_pg.yml up -d
+docker-compose -f test/docker-compose_pg.yml down
+
+# with new DB
+docker run -d --name dc -p 3500:3000 oydeu/dc-base:arm64v8
+
+# check data type
+Store.attribute_types["item"].type
+
+# create DID for container
+
+echo '[{
+    "id":"#semcon",
+    "type": "DecentralizedWebNode",
+    "serviceEndpoint": {
+      "nodes": ["http://localhost:3500"]
+    }
+  }]' | oydid create -l http://localhost:3500
+
+echo '[{
+    "id":"#semcon",
+    "type": "DecentralizedWebNode",
+    "serviceEndpoint": {
+      "nodes": ["https://dwn.data-container.net"]
+    }
+  }]' | oydid create
+
+echo '{"my":"payload"}' | ./semcon.rb write zQmZBHzK5AxsYAQaDn3hULRQuCBfbpTGWtG3vb5qjgs4aFj
+
+
+docker-compose --compatibility -f test/docker-compose_pg.yml up -d 
+
+
+echo '[{                                                                                                         
+    "id":"#semcon",
+    "type": "DecentralizedWebNode",
+    "serviceEndpoint": {
+      "nodes": ["http://localhost:3500"]
+    }
+  }]' | ~/semcon/oydid/cli/oydid.rb create -l http://localhost:3500
+# created did:oyd:zQmS8RCtWiX9oquH29p2QyHue4mKdCY2xcbcpQ9jUoBbcnK@http://localhost:3500
+
+
+echo '{"my":"payload"}' | ./semcon.rb write zQmS8RCtWiX9oquH29p2QyHue4mKdCY2xcbcpQ9jUoBbcnK@http://localhost:3500
+
+Doorkeeper::Application.create!({name: 'master', uid: 'rkgYEN5QXmsFcwbH-awWoo9Q5BJd6vdGoyzRHI0lOZs', secret: 'AoaoR9-Aj7woafUW7hnARWVbNqaBxINiqteyMDMuBoA', redirect_uri: 'urn:ietf:wg:oauth:2.0:oob', scopes: 'admin write read'})
+
+export APP_KEY=VWzAwe2fq6H5sqzcIKI6jbmb8-S-W7bnat8TKbWoguw
+export APP_SECRET=_p6IHlo4pjv3xcBLGopddzK0n92XQYIzJFh2B_SJZhM
+export TOKEN=`curl -s -d grant_type=client_credentials -d client_id=$APP_KEY -d client_secret=$APP_SECRET -d scope=admin -X POST http://localhost:3500/oauth/token | jq -r '.access_token'`
+
+echo '{"test":"auth"}' | ./semcon.rb write --token $TOKEN zQmS8RCtWiX9oquH29p2QyHue4mKdCY2xcbcpQ9jUoBbcnK@http://localhost:3500
+
+
+curl -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '[{"data":"value"}]' -X POST http://localhost:4000/api/data
+
+
+echo '[{
+    "id":"#semcon",
+    "type": "DecentralizedWebNode",
+    "serviceEndpoint": {
+      "nodes": ["https://dec-support.data-container.net"]
+    }
+  }]' | ~/dev/oydid/cli/oydid.rb create -l https://dec-support.data-container.net --doc-pwd pwd1 --rev-pwd pwd2 --ts 1
+
+# created did:oyd:zQmboMs8qaPbS7oFr8kNggxhKNmfsCKzvY6np3a7JMw9FBe@https://dec-support.data-container.net
+
+Doorkeeper::Application.create!({name: 'master', uid: 'rkgYEN5QXmsFcwbH-awWoo9Q5BJd6vdGoyzRHI0lOZs', secret: 'AoaoR9-Aj7woafUW7hnARWVbNqaBxINiqteyMDMuBoA', redirect_uri: 'urn:ietf:wg:oauth:2.0:oob', scopes: 'admin write read'})
+
+Doorkeeper::Application.create!({name: 'oydid', redirect_uri: 'urn:ietf:wg:oauth:2.0:oob', scopes: 'write read'})
+
+
+Store.new(item: {"username":"john"}).save
+
+export APP_KEY=rkgYEN5QXmsFcwbH-awWoo9Q5BJd6vdGoyzRHI0lOZs
+export APP_SECRET=AoaoR9-Aj7woafUW7hnARWVbNqaBxINiqteyMDMuBoA
+export TOKEN=`curl -s -d grant_type=client_credentials -d client_id=$APP_KEY -d client_secret=$APP_SECRET -d scope=admin -X POST https://dec-support.data-container.net/oauth/token | jq -r '.access_token'`
+curl -H "Authorization: Bearer $TOKEN" https://dec-support.data-container.net/api/active
+
+curl -H "Authorization: Bearer $TOKEN" https://dec-support.data-container.net/api/data?dri=zQmSpkGKmRQHjNuwCJ5vQTkxm81igGC96oCWQ3tWSHE5iG2

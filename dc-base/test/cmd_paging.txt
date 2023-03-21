@@ -1,0 +1,31 @@
+echo '{"my":"payload"}' | curl -H "Content-Type: application/json" -d @- -X POST http://localhost:3500/api/data
+
+for i in {1..30}; do curl -H "Content-Type: application/json" -d "{\"my\":\"payload_$i\"}" -X POST http://localhost:3500/api/data; done
+
+curl http://localhost:3500/api/data
+
+curl "http://localhost:3500/api/data?page=2"
+curl "http://localhost:3500/api/data?page=2&items=5"
+
+
+echo '[{
+    "id":"#semcon",
+    "type": "DecentralizedWebNode",
+    "serviceEndpoint": {
+      "nodes": ["http://localhost:3500"]
+    }
+  }]' | oydid create -l http://localhost:3500 -z 1 --doc-pwd 1 --rev-pwd 1
+
+=== Playground2
+echo '{"my":"payload"}' | curl -H "Content-Type: application/json" -d @- -X POST https://playground2.data-container.net/api/data
+
+curl https://playground2.data-container.net/api/data
+
+echo '{"names":[{"name":"Christoph","hobbies":[{"hobby":"SOyA"},{"hobby":"JSON Forms"}]}]}' | jq -c '{"content": ., "meta":{"schema":"Test"}}' | curl -H "Content-Type: application/json" -d @- -X POST https://playground2.data-container.net/api/data
+
+curl https://playground2.data-container.net/api/meta/schemas
+curl "https://playground2.data-container.net/api/data?schema=Test"
+
+for i in {1..30}; do curl -H "Content-Type: application/json" -d "{\"my\":\"payload_$i\"}" -X POST https://playground2.data-container.net/api/data; done
+
+curl "https://playground2.data-container.net/api/data?page=2&items=5"

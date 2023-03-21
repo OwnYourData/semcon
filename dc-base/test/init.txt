@@ -1,0 +1,6 @@
+Doorkeeper::Application.create!({name: 'master', uid: 'rkgYEN5QXmsFcwbH-awWoo9Q5BJd6vdGoyzRHI0lOZs', secret: 'AoaoR9-Aj7woafUW7hnARWVbNqaBxI
+NiqteyMDMuBoA', redirect_uri: 'urn:ietf:wg:oauth:2.0:oob', scopes: 'admin write read'})
+
+Doorkeeper::Application.create!({name: 'oydid', redirect_uri: 'urn:ietf:wg:oauth:2.0:oob', scopes: 'write read'})
+
+Doorkeeper::Application.create!({name: 'oydid-vc', redirect_uri: 'urn:ietf:wg:oauth:2.0:oob', scopes: 'read'})

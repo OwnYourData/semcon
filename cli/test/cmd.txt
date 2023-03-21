@@ -1,0 +1,20 @@
+# create DID
+echo '[{
+    "id":"#semcon",
+    "type": "DecentralizedWebNode",
+    "serviceEndpoint": {
+      "nodes": ["http://192.168.178.60:3500"]
+    }
+  }]' | oydid create -l http://192.168.178.60:3500
+
+# setup OAuth in container > rails c
+Doorkeeper::Application.create!({name: 'master', uid: 'rkgYEN5QXmsFcwbH-awWoo9Q5BJd6vdGoyzRHI0lOZs', secret: 'AoaoR9-Aj7woafUW7hnARWVbNqaBxINiqteyMDMuBoA', redirect_uri: 'urn:ietf:wg:oauth:2.0:oob', scopes: 'admin write read'})
+Doorkeeper::Application.create!({name: 'oydid', redirect_uri: 'urn:ietf:wg:oauth:2.0:oob', scopes: 'write read'})
+
+export APP_KEY=rkgYEN5QXmsFcwbH-awWoo9Q5BJd6vdGoyzRHI0lOZs
+export APP_SECRET=AoaoR9-Aj7woafUW7hnARWVbNqaBxINiqteyMDMuBoA
+export TOKEN=`curl -s -d grant_type=client_credentials -d client_id=$APP_KEY -d client_secret=$APP_SECRET -d scope=admin -X POST http://localhost:3500/oauth/token | jq -r '.access_token'`
+
+curl -H "Authorization: Bearer $TOKEN" http://localhost:3500/api/active
+
+echo '{"test":"auth"}' | ./semcon.rb write --token $TOKEN zQmS8RCtWiX9oquH29p2QyHue4mKdCY2xcbcpQ9jUoBbcnK@http://localhost:3500

@@ -1,0 +1,1 @@
+$OYDIDCMD create -l http://localhost:3500 -z 1 --doc-pwd pwd1 --rev-pwd pwd2

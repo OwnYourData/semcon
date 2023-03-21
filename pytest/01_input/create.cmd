@@ -1,0 +1,1 @@
+semcon write did:oyd:zQmNrB3k8KzZjmCkqRWtX48oKYJC2oeLDjSXQ9NbWhobTQE%40http%3A%2F%2Flocalhost%3A3500 -z 1 --doc-pwd pwd1 --rev-pwd pwd2  --return_secrets

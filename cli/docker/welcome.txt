@@ -1,0 +1,14 @@
+
+Welcome to Semantic Container
+
+Installed components:
+* semcon - version: ${semcon}
+* oydid - version: ${oydid}
+* jq - version: ${jq}
+
+More information: https://github.com/OwnYourData/semcon/
+
+Example:
+$ echo '["payload"]' | semcon write
+
+For a listing of options, use /usr/local/bin/semcon --help.
