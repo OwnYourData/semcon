@@ -27,6 +27,13 @@ export interface VaultifierWebOptions {
    */
   baseUrlParamName: string,
   /**
+   * @deprecated
+   * 
+   * Name of query parameter used to retrieve the data container's base url
+   * This property only exists for legacy reasons
+   */
+  baseUrlParamNameAlt: string,
+  /**
    * Name of query parameter used to retrieve the plugin's "Identifier" (appKey)
    */
   appKeyParamName: string,
@@ -67,7 +74,9 @@ export interface InitConfig {
 const defaultOptions: VaultifierWebOptions = {
   repo: undefined,
   clientId: undefined,
-  baseUrlParamName: 'PIA_URL',
+  baseUrlParamName: 'URL',
+  // for legacy reasons
+  baseUrlParamNameAlt: 'PIA_URL',
   appKeyParamName: 'APP_KEY',
   appSecretParamName: 'APP_SECRET',
   masterKeyParamName: 'MASTER_KEY',
@@ -102,6 +111,7 @@ export class VaultifierWeb {
 
     const {
       baseUrlParamName,
+      baseUrlParamNameAlt,
       repo,
     } = _options
 
@@ -110,7 +120,7 @@ export class VaultifierWeb {
     } = _options;
 
     if (!baseUrl) {
-      baseUrl = getParam(baseUrlParamName);
+      baseUrl = getParam(baseUrlParamName) ?? getParam(baseUrlParamNameAlt);
 
       if (baseUrl) {
         // in web environments we want to persist the base url
