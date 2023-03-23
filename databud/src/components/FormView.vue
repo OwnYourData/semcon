@@ -91,7 +91,7 @@ export default Vue.extend({
 
       this.isLoading = true;
 
-      const url = new URL('https://form.ownyourdata.unterholzer.dev');
+      const url = new URL('https://soya-form.ownyourdata.eu');
       const { searchParams: params } = url;
 
       params.append('viewMode', 'embedded');
