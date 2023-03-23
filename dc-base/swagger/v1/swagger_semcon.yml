@@ -120,8 +120,10 @@ paths:
             type: string
             enum:
               - schemas
+              - info
           description: >-
-            'schemas' returns an array of all used Schema Base DRIs (SOyA),
+            'schemas' returns an array of all used Schema Base DRIs (SOyA)
+            'info' provides container information
       responses:
         '200':
           description: success
@@ -135,16 +137,21 @@ paths:
       tags:
         - Read/Write Data
       parameters:
-        - name: schema_dri
+        - name: id
           in: query
-          description: >-
-            DRI (Decentralized Resource Identifier) of the OCA schema base
-            describing the data
+          description: database id of a record
           schema:
             type: string
-        - name: table
+        - name: dri
           in: query
-          description: all records with specified table name
+          description: DRI (Decentralised Resource Identifier) of a record
+          schema:
+            type: string
+        - name: schema
+          in: query
+          description: >-
+            DRI (Decentralised Resource Identifier) of the schema
+            describing the data
           schema:
             type: string
         - name: f
@@ -154,11 +161,7 @@ paths:
           schema:
             type: string
             enum:
-              - plain
-              - full
               - meta
-              - validation
-            default: full
       responses:
         '200':
           description: 'Return raw data, or an array of raw data'
@@ -180,6 +183,69 @@ paths:
             application/json:
               schema:
                 properties:
+                  dri:
+                    type: string
+                  id:
+                    type: integer
+        '403':
+          description: Permission denied
+    put:
+      summary: Update data
+      tags:
+        - Read/Write Data
+      parameters:
+        - name: id
+          in: query
+          description: database id of a record
+          schema:
+            type: string
+        - name: dri
+          in: query
+          description: DRI (Decentralised Resource Identifier) of a record
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataBody'
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                properties:
+                  dri:
+                    type: string
+                  id:
+                    type: integer
+        '403':
+          description: Permission denied
+    delete:
+      summary: Delete data
+      tags:
+        - Read/Write Data
+      parameters:
+        - name: id
+          in: query
+          description: database id of a record
+          schema:
+            type: string
+        - name: dri
+          in: query
+          description: DRI (Decentralised Resource Identifier) of a record
+          schema:
+            type: string
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                properties:
+                  dri:
+                    type: string
                   id:
                     type: integer
         '403':
@@ -243,19 +309,17 @@ components:
           type: integer
     DataBody:
       properties:
-        content:
+        data:
           description: Key value json file representing data from schema base
           type: object
+        meta:
+          type: object
+        id:
+          type: integer
         dri:
           type: string
-        schema_dri:
+        schema:
           type: string
-        mime_type:
-          type: string
-          example: application/json
-        table_name:
-          type: string
-          description: tag to group records (mimics repo functionality of Data Vault)
   requestBodies:
     Input:
       content:

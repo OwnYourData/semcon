@@ -10,69 +10,106 @@ module Api
             after_action { pagy_headers_merge(@pagy) if @pagy }
 
             def write
-                data = params.permit!["data"].to_hash rescue nil
+                input = params.permit!["data"].to_hash rescue nil
                 did_document = params.permit!["did-document"].to_hash rescue nil
                 did_log = params.permit!["did-log"].to_hash rescue nil
-                if data.nil?
-                    data = params.permit!.except(:format, :controller, :action, :store).to_hash rescue nil
+                if input.nil?
+                    input = params.permit!.except(:format, :controller, :action, :store).to_hash rescue nil
+                else
+                    input_meta = params.permit!["meta"].to_hash rescue nil
+                    if !input_meta.nil?
+                        input = params.permit!.except(:format, :controller, :action, :store).to_hash rescue nil
+                    end
                 end
-                if data.nil?
+                if !input["_json"].nil?
+                    input = input["_json"]
+                end
+                if input.nil?
                     render json: {"error": "invalid input"},
                            status: 400
                     return
                 end
-                dri = Oydid.hash(Oydid.canonical(data.to_json))
+
+                meta_data = nil
+                schema = nil
+                if !did_document.nil?
+                    # DID
+                    item_data = input["data"]["content"] rescue nil
+                    meta_data = input["data"]["meta"].except(:schema, "schema") rescue nil
+                    schema = input["data"]["meta"]["schema"] rescue nil
+                else
+                    if input.is_a?(Array) || input["data"].nil?
+                        # Anything
+                        if input.is_a?(Array)
+                            item_data = input
+                        else
+                            item_data = input.except(:meta, "meta", :schema, "schema")
+                            meta_data = input["meta"].except(:schema, "schema") rescue nil
+                            schema = input["meta"]["schema"] rescue nil
+                        end
+                    else
+                        if input["data"]["content"].nil?
+                            # Plain data
+                            item_data = input["data"].except(:meta, "meta", :schema, "schema")
+                            meta_data = input["meta"].except(:schema, "schema") rescue nil
+                            schema = input["meta"]["schema"] rescue nil
+                        else
+                            # Legacy Structured data
+                            item_data = input["data"]["content"]
+                            meta_data = input["data"]["meta"].except(:schema, "schema") rescue nil
+                            schema = input["data"]["meta"]["schema"] rescue nil
+                        end
+                    end
+                end
+                if meta_data.nil?
+                    dri = Oydid.hash(Oydid.canonical(item_data.to_json))
+                else
+                    dri = Oydid.hash(Oydid.canonical({"data": item_data, "meta": meta_data}.to_json))
+                end
 
                 if did_document.nil?
                     @store = Store.find_by_dri(dri)
                     if @store.nil?
-                        if data["content"].nil?
-                            if Rails.configuration.database_configuration[Rails.env]["adapter"] == "postgresql"
-                                @store = Store.new(item: data, dri: dri)
-                            else
-                                @store = Store.new(item: data.to_json, dri: dri)
-                            end
+                        if Rails.configuration.database_configuration[Rails.env]["adapter"] == "postgresql"
+                            @store = Store.new(item: item_data, meta: meta_data, dri: dri, schema: schema)
                         else
-                            if data["meta"].nil?
-                                if Rails.configuration.database_configuration[Rails.env]["adapter"] == "postgresql"
-                                    @store = Store.new(item: data["content"], dri: dri)
-                                else
-                                    @store = Store.new(item: data["content"].to_json, dri: dri)
-                                end
-                            else
-                                if data["meta"]["schema"].nil?
-                                    if Rails.configuration.database_configuration[Rails.env]["adapter"] == "postgresql"
-                                        @store = Store.new(item: data["content"], meta: data["meta"], dri: dri)
-                                    else
-                                        @store = Store.new(item: data["content"].to_json, meta: data["meta"].to_json, dri: dri)
-                                    end
-                                else
-                                    if Rails.configuration.database_configuration[Rails.env]["adapter"] == "postgresql"
-                                        @store = Store.new(item: data["content"], meta: data["meta"].except(:schema, "schema"), dri: dri, schema: data["meta"]["schema"].to_s)
-                                    else
-                                        @store = Store.new(item: data["content"].to_json, meta: data["meta"].except(:schema, "schema").to_json, dri: dri, schema: data["meta"]["schema"].to_s)
-                                    end
-                                end
+                            @store = Store.new
+                            @store.item = item_data.to_json
+                            if !meta_data.nil?
+                                @store.meta = meta_data.to_json
                             end
+                            @store.dri = dri
+                            @store.schema = schema
                         end
                         @store.save
+                    else
+                        if Rails.configuration.database_configuration[Rails.env]["adapter"] == "postgresql"
+                            @store.item = item_data
+                            @store.meta = meta_data
+                        else
+                            @store.item = item_data.to_json
+                            if !meta_data.nil?
+                                @store.meta = meta_data.to_json
+                            end
+                        end
+                        @store.schema = schema
+                        @store.save
                     end                        
-                    render json: {"dri": dri.to_s},
+                    render json: {"dri": dri.to_s, "id": @store.id},
                            status: 200
                 else
                     did = Oydid.hash(Oydid.canonical(did_document.to_json)) rescue nil
-                    if data["meta"]["schema"].nil?
-                        if Rails.configuration.database_configuration[Rails.env]["adapter"] == "postgresql"
-                            @store = Store.new(item: data["content"], meta: data["meta"], dri: dri, did: did)
-                        else
-                            @store = Store.new(item: data["content"].to_json, meta: data["meta"].to_json, dri: dri, did: did)
-                        end
+                    if Rails.configuration.database_configuration[Rails.env]["adapter"] == "postgresql"
+                        @store = Store.new(item: item_data, meta: meta_data, dri: dri, schema: schema, did: did)
                     else
-                        if Rails.configuration.database_configuration[Rails.env]["adapter"] == "postgresql"
-                            @store = Store.new(item: data["content"], meta: data["meta"].except(:schema, "schema"), dri: dri, schema: data["meta"]["schema"].to_s, did: did)
-                        else
-                            @store = Store.new(item: data["content"].to_json, meta: data["meta"].except(:schema, "schema").to_json, dri: dri, schema: data["meta"]["schema"].to_s, did: did)
+                        @store = Store.new
+                        @store.item = item_data.to_json
+                        if !meta_data.nil?
+                            @store.meta = meta_data.to_json
                         end
+                        @store.dri = dri
+                        @store.schema = schema
+                        @store.did = did
                     end
                     @store.save
 
@@ -122,7 +159,7 @@ module Api
                 elsif schema != ""
                     @pagy, @store = pagy(Store.where(schema: schema), page: page, items: items)
                 else
-                    if query_params.except(:page, :items) == {}
+                    if query_params.except(:page, :items, :f, "f") == {}
                         @pagy, @store = pagy(Store.all, page: page, items: items)
                     else
                         if Rails.configuration.database_configuration[Rails.env]["adapter"] == "postgresql"
@@ -147,17 +184,215 @@ module Api
                             end
                         end
                     end
-                    if @store.count > 1
-                        render json: @store.select(:item,:meta,:id,:dri,:schema),
-                               status: 200
+
+                    retVal = []
+                    store_count = @store.count rescue 1
+                    if store_count > 1
+                        case params[:f]
+                        when "meta"
+                            retVal = @store.select(:meta,:id,:dri,:schema)
+                        else
+                            retVal = @store.select(:item,:meta,:id,:dri,:schema)
+                        end
                     else
                         if @store.class.to_s == "Store::ActiveRecord_Relation"
                             @store = @store.first
                         end
-                        render json: {item: @store.item, meta: @store.meta, id: @store.id, dri: @store.dri, schema: @store.schema},
+                        case params[:f]
+                        when "meta"
+                            retVal = {meta: @store.meta, id: @store.id, dri: @store.dri, schema: @store.schema}
+                        else
+                            retVal = {item: @store.item, meta: @store.meta, id: @store.id, dri: @store.dri, schema: @store.schema}
+                        end
+                    end
+
+                    # create output format
+                    if store_count == 1
+                        retVal = JSON.parse(retVal.to_json)
+                        response_object = {}
+                        if !retVal["item"].nil?
+                            if retVal["item"].is_a?(String)
+                                response_object["data"] = JSON.parse(retVal["item"])
+                            else
+                                response_object["data"] = retVal["item"]
+                            end
+                        end
+                        if retVal["meta"].nil?
+                            if !retVal["schema"].nil?
+                                retVal["meta"]={"schema": retVal["schema"]}
+                            end
+                        else
+                            if retVal["meta"].is_a?(String)
+                                response_object["meta"] = JSON.parse(retVal["meta"])
+                            else
+                                response_object["meta"] = retVal["meta"]
+                            end
+                            response_object["meta"]["schema"] = retVal["schema"]
+                        end
+                        response_object["id"] = retVal["id"]
+                        response_object["dri"] = retVal["dri"]
+                    else
+                        response_array = []
+                        iteration_object = retVal.dup
+                        iteration_object.each do |i|
+                            retVal = JSON.parse(i.to_json)
+                            response_object = {}
+                            if !retVal["item"].nil?
+                                response_object["data"] = retVal["item"]
+                            end
+                            if retVal["meta"].nil?
+                                if !retVal["schema"].nil?
+                                    retVal["meta"]={"schema": retVal["schema"]}
+                                end
+                            else
+                                response_object["meta"] = retVal["meta"]
+                                response_object["meta"]["schema"] = retVal["schema"]
+                            end
+                            response_object["id"] = retVal["id"]
+                            response_object["dri"] = retVal["dri"]
+                            response_array << response_object
+                        end
+                        response_object = response_array
+                    end
+                    if !params[:schema].nil?
+                        if !response_object.is_a?(Array)
+                            response_object = [response_object]
+                        end
+                    end
+
+                    render json: response_object,
+                           status: 200
+                end
+            end
+
+            def update
+                input = params.permit!["data"].to_hash rescue nil
+                input_meta = params.permit!["meta"].to_hash rescue nil
+                if !input_meta.nil?
+                    input = params.permit!.except(:format, "format", :controller, "controller", :action, "action", :store, "store").to_hash rescue nil
+                end
+                if input.nil?
+                    input = params.permit!.except(:format, "format", :controller, "controller", :action, "action", :store, "store", :id, "id", :dri, "dri").to_hash rescue nil
+                end
+                if !input["_json"].nil?
+                    input = input["_json"]
+                end
+                if input.nil?
+                    render json: {"error": "invalid input"},
+                           status: 400
+                    return
+                end
+                dri = params[:dri].to_s
+                id = params[:id].to_s
+                @store = nil
+                if dri != ""
+                    @store = Store.find_by_dri(dri)
+                elsif id != ""
+                    @store = Store.find(id)
+                end
+                if @store.nil?
+                    render json: {"error": "not found"},
+                           status: 404
+                    return
+                end
+
+                id = @store.id
+                meta_data = nil
+                schema = nil
+                if input.is_a?(Array) || input["data"].nil?
+                    # Anything
+                    if input.is_a?(Array)
+                        item_data = input
+                    else
+                        item_data = input.except(:meta, "meta", :schema, "schema")
+                        meta_data = input["meta"].except(:schema, "schema") rescue nil
+                        schema = input["meta"]["schema"] rescue nil
+                    end
+                else
+                    if input["data"]["content"].nil?
+                        # Plain data
+                        item_data = input["data"].except(:meta, "meta", :schema, "schema")
+                        meta_data = input["meta"].except(:schema, "schema") rescue nil
+                        schema = input["meta"]["schema"] rescue nil
+                    else
+                        # Legacy Structured data
+                        item_data = input["data"]["content"]
+                        meta_data = input["data"]["meta"].except(:schema, "schema") rescue nil
+                        schema = input["meta"]["schema"] rescue nil
+                    end
+                end
+                if meta_data.nil?
+                    new_dri = Oydid.hash(Oydid.canonical(item_data.to_json))
+                else
+                    new_dri = Oydid.hash(Oydid.canonical({"data": item_data, "meta": meta_data}.to_json))
+                end
+
+                @new_store = Store.find_by_dri(new_dri)
+
+                if @new_store.nil?
+                    if Rails.configuration.database_configuration[Rails.env]["adapter"] == "postgresql"
+                        @store.item = item_data
+                        @store.meta = meta_data
+                    else
+                        @store.item = item_data.to_json
+                        if !meta_data.nil?
+                            @store.meta = meta_data.to_json
+                        end
+                    end
+                    @store.dri = new_dri
+                    @store.schema = schema
+                    @store.save
+                    render json: {"dri": new_dri.to_s, "id": @store.id},
+                           status: 200
+                else
+                    if Rails.configuration.database_configuration[Rails.env]["adapter"] == "postgresql"
+                        @new_store.item = item_data
+                        @new_store.meta = meta_data
+                    else
+                        @new_store.item = item_data.to_json
+                        if !meta_data.nil?
+                            @new_store.meta = meta_data.to_json
+                        end
+                    end
+                    @new_store.dri = new_dri
+                    @new_store.schema = schema
+                    @new_store.save
+
+                    old_dri = @store.dri
+                    old_id = @store.id
+                    if old_id.to_s != id.to_s
+                        @store.destroy
+                        render json: {"dri": new_dri.to_s, "id": @store.id, "removed":{"dri": old_dri, "id": old_id}},
+                               status: 200
+                    else
+                        render json: {"dri": new_dri.to_s, "id": @store.id},
                                status: 200
                     end
                 end
+            end
+
+            def delete
+                dri = params[:dri].to_s
+                id = params[:id].to_s
+                @store = nil
+                if dri != ""
+                    @store = Store.find_by_dri(dri)
+                elsif id != ""
+                    @store = Store.find(id)
+                end
+                if @store.nil?
+                    render json: {"error": "not found"},
+                           status: 404
+                    return
+                end
+
+                dri = @store.dri
+                id = @store.id
+                @store.destroy
+
+                render json: {"dri": dri.to_s, "id": id},
+                       status: 200
+
             end
 
             def schemas

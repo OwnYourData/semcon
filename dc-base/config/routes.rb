@@ -9,7 +9,10 @@ Rails.application.routes.draw do
             match 'active',             to: 'resources#active',       via: 'get'
             match 'data',               to: 'stores#read',            via: 'get'
             match 'data',               to: 'stores#write',           via: 'post'
+            match 'data',               to: 'stores#update',          via: 'put'
+            match 'data',               to: 'stores#delete',          via: 'delete'
             match 'meta/schemas',       to: 'stores#schemas',         via: 'get'
+            match 'meta/info',          to: 'resources#info',         via: 'get'
 
         end
         # template for multiple versions
