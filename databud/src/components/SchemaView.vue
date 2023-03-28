@@ -168,10 +168,11 @@ export default Vue.extend({
         try {
           const sparql = await soya.getSparqlBuilder(doc);
           const bindings = await sparql.query(`
-  PREFIX soya: <${doc["@context"]["@base"]}>
+  PREFIX base: <${doc["@context"]["@base"]}>
+  PREFIX soya: <https://w3id.org/soya/ns#>
   SELECT * WHERE {
-      ?base a soya:OverlayDataBudRendering .
-      ?base <http://www.w3.org/2000/01/rdf-schema#label> ?label .
+      ?base a base:OverlayDataBudRendering .
+      ?base soya:renderingLabel ?label .
   }`);
 
           if (bindings[0])

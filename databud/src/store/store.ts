@@ -179,9 +179,9 @@ export const getStore = () => {
 
             const sparql = await soya.getSparqlBuilder(doc);
             const bindings = await sparql.query(`
-            PREFIX soya: <${doc["@context"]["@base"]}>
+            PREFIX base: <${doc["@context"]["@base"]}>
             SELECT * WHERE {
-                ?base a soya:OverlayDataBudRendering .
+                ?base a base:OverlayDataBudRendering .
             }`);
 
             // if there is an overlay for DataBudRendering
