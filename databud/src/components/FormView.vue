@@ -91,7 +91,9 @@ export default Vue.extend({
 
       this.isLoading = true;
 
-      const url = new URL('https://soya-form.ownyourdata.eu');
+      const { searchParams: windowParams } = new URL(window.location.href);
+      // one can specify a different form url via URL params
+      const url = new URL(windowParams.get('FORM_URL') || 'https://soya-form.ownyourdata.eu');
       const { searchParams: params } = url;
 
       params.append('viewMode', 'embedded');
