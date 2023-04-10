@@ -11,7 +11,7 @@ export interface IFetchVaultItems {
   page?: number;
   size?: number;
   repo?: VaultRepo;
-  schema?: VaultSchema;
+  schema?: Partial<VaultSchema>;
   fetchContent?: boolean;
 }
 export interface IStore {
@@ -172,7 +172,7 @@ export const getStore = () => {
         commit(MutationType.SET_VAULT_ITEM, undefined);
         commit(MutationType.SET_CURRENT_SCHEMA, undefined);
 
-        if (schema) {
+        if (schema?.dri) {
           try {
             const doc = await soya.pull(schema.dri);
             commit(MutationType.SET_CURRENT_SCHEMA, doc);
