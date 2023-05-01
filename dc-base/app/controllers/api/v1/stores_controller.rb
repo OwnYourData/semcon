@@ -2,6 +2,7 @@ module Api
     module V1
         class StoresController < ApiController
             include Pagy::Backend
+            include StoresHelper
 
             rescue_from ActionDispatch::Http::Parameters::ParseError do |exception|
                 render status: 400, json: { errors: [ exception.cause.message ] }
@@ -12,14 +13,9 @@ module Api
             def write
                 input = params.permit!["data"].to_hash rescue nil
                 did_document = params.permit!["did-document"].to_hash rescue nil
-                did_log = params.permit!["did-log"].to_hash rescue nil
+                did_log = params.permit!["did-log"] rescue nil
                 if input.nil?
                     input = params.permit!.except(:format, :controller, :action, :store).to_hash rescue nil
-                else
-                    input_meta = params.permit!["meta"].to_hash rescue nil
-                    if !input_meta.nil?
-                        input = params.permit!.except(:format, :controller, :action, :store).to_hash rescue nil
-                    end
                 end
                 if !input["_json"].nil?
                     input = input["_json"]
@@ -34,9 +30,9 @@ module Api
                 schema = nil
                 if !did_document.nil?
                     # DID
-                    item_data = input["data"]["content"] rescue nil
-                    meta_data = input["data"]["meta"].except(:schema, "schema") rescue nil
-                    schema = input["data"]["meta"]["schema"] rescue nil
+                    item_data = input["data"] rescue nil
+                    meta_data = input["meta"].except(:schema, "schema") rescue nil
+                    schema = input["meta"]["schema"] rescue nil
                 else
                     if input.is_a?(Array) || input["data"].nil?
                         # Anything
@@ -48,9 +44,14 @@ module Api
                             schema = input["meta"]["schema"] rescue nil
                         end
                     else
-                        if input["data"]["content"].nil?
+                        data_content = input["data"]["content"] rescue nil
+                        if data_content.nil?
                             # Plain data
-                            item_data = input["data"].except(:meta, "meta", :schema, "schema")
+                            if input["data"].is_a?(Array)
+                                item_data = input["data"]
+                            else
+                                item_data = input["data"].except(:meta, "meta", :schema, "schema")
+                            end
                             meta_data = input["meta"].except(:schema, "schema") rescue nil
                             schema = input["meta"]["schema"] rescue nil
                         else
@@ -61,85 +62,38 @@ module Api
                         end
                     end
                 end
-                if meta_data.nil?
-                    dri = Oydid.hash(Oydid.canonical(item_data.to_json))
-                else
-                    dri = Oydid.hash(Oydid.canonical({"data": item_data, "meta": meta_data}.to_json))
-                end
-
-                if did_document.nil?
-                    @store = Store.find_by_dri(dri)
-                    if @store.nil?
-                        if Rails.configuration.database_configuration[Rails.env]["adapter"] == "postgresql"
-                            @store = Store.new(item: item_data, meta: meta_data, dri: dri, schema: schema)
+                if params[:f].to_s.downcase == "array" && item_data.is_a?(Array)
+                    retVal = []
+                    item_data.each do |i|
+                        if meta_data.nil?
+                            i_data = i.except(:meta, "meta", :schema, "schema")
+                            m_data = i["meta"].except(:schema, "schema") rescue nil
+                            schema = i["meta"]["schema"] rescue nil
+                            i_retVal = write_item(i_data, m_data, schema, nil, nil)
                         else
-                            @store = Store.new
-                            @store.item = item_data.to_json
-                            if !meta_data.nil?
-                                @store.meta = meta_data.to_json
-                            end
-                            @store.dri = dri
-                            @store.schema = schema
+                            i_retVal = write_item(i, meta_data, schema, nil, nil)
                         end
-                        @store.save
-                    else
-                        if Rails.configuration.database_configuration[Rails.env]["adapter"] == "postgresql"
-                            @store.item = item_data
-                            @store.meta = meta_data
-                        else
-                            @store.item = item_data.to_json
-                            if !meta_data.nil?
-                                @store.meta = meta_data.to_json
-                            end
-                        end
-                        @store.schema = schema
-                        @store.save
-                    end                        
-                    render json: {"dri": dri.to_s, "id": @store.id},
-                           status: 200
+                        retVal << i_retVal
+                    end
                 else
-                    did = Oydid.hash(Oydid.canonical(did_document.to_json)) rescue nil
-                    if Rails.configuration.database_configuration[Rails.env]["adapter"] == "postgresql"
-                        @store = Store.new(item: item_data, meta: meta_data, dri: dri, schema: schema, did: did)
-                    else
-                        @store = Store.new
-                        @store.item = item_data.to_json
-                        if !meta_data.nil?
-                            @store.meta = meta_data.to_json
-                        end
-                        @store.dri = dri
-                        @store.schema = schema
-                        @store.did = did
-                    end
-                    @store.save
-
-                    create_entry = did_log.first.to_json
-                    terminate_entry = did_log.last.to_json
-                    @did = Did.find_by_did(did)
-                    if @did.nil?
-                        Did.new(did: did, doc: did_document.to_json).save
-                    else
-                        @did.doc = did_document.to_json
-                        @did.save
-                    end
-                    create_hash = Oydid.hash(Oydid.canonical(create_entry))
-                    @log = Log.find_by_oyd_hash(create_hash)
-                    if @log.nil?
-                        Log.new(did: did, item: create_entry, oyd_hash: create_hash, ts: Time.now.utc.to_i).save
-                    end
-                    terminate_hash = Oydid.hash(Oydid.canonical(terminate_entry))
-                    @log = Log.find_by_oyd_hash(terminate_hash)
-                    if @log.nil?
-                        Log.new(did: did, item: terminate_entry, oyd_hash: terminate_hash, ts: Time.now.utc.to_i).save
-                    end
-
-                    render json: {"did": "did:oyd:" + did + LOCATION_PREFIX + did_document["log"].split(LOCATION_PREFIX).last},
-                           status: 200
+                    retVal = write_item(item_data, meta_data, schema, did_document, did_log)
                 end
+                render json: retVal,
+                       status: 200
+
             end
 
             def read
-                query_params = request.query_parameters
+                # Examples for query_params
+                # GET /api/data?value=1
+                # echo '{"query":{"meta-not":{"processed": true}}}' | \
+                #    curl  -H "Content-Type: application/json" -d @- -X GET http://localhost:3500/api/data
+                query_params = request.query_parameters rescue {}
+                if !params[:query].nil?
+                    query_body = params.permit![:query].to_hash
+                    query_params = query_params.merge(query_body)
+                end
+
                 dri = params[:dri].to_s
                 id = params[:id].to_s
                 schema = params[:schema].to_s
@@ -157,26 +111,72 @@ module Api
                 elsif id != ""
                     @store = Store.find(id)
                 elsif schema != ""
-                    @pagy, @store = pagy(Store.where(schema: schema), page: page, items: items)
+                    @pagy, @store = pagy(Store.where(schema: schema).order(id: :asc), page: page, items: items)
                 else
                     if query_params.except(:page, :items, :f, "f") == {}
-                        @pagy, @store = pagy(Store.all, page: page, items: items)
+                        @pagy, @store = pagy(Store.all.order(id: :asc), page: page, items: items)
                     else
                         if Rails.configuration.database_configuration[Rails.env]["adapter"] == "postgresql"
                             # query_params: https://www.cstutorial.org/ruby-on-rails/how-to-query-postgresqls-json-fields-from-rails
-                            @store = Store.where('item @> ?', query_params.to_json).first
+                            if ["data", "data-not", "meta", "meta-not"].any? {|k| query_params.key?(k)}
+                                query_string = ""
+                                if query_params.key?("data")
+                                    if query_string == ""
+                                        query_string = "item @> '" + query_params["data"].to_json + "'"
+                                    else
+                                        query_string += " AND item @> '" + query_params["data"].to_json + "'"
+                                    end
+                                end
+                                if query_params.key?("meta")
+                                    if query_string == ""
+                                        query_string = "meta @> '" + query_params["meta"].to_json + "'"
+                                    else
+                                        query_string += " AND meta @> '" + query_params["meta"].to_json + "'"
+                                    end
+                                end
+                                not_query_string = ""
+                                if query_params.key?("data-not")
+                                    if not_query_string == ""
+                                        not_query_string = "item @> '" + query_params["data-not"].to_json + "'"
+                                    else
+                                        not_query_string += " AND item @> '" + query_params["data-not"].to_json + "'"
+                                    end
+                                end
+                                if query_params.key?("meta-not")
+                                    if not_query_string == ""
+                                        not_query_string = "meta @> '" + query_params["meta-not"].to_json + "'"
+                                    else
+                                        not_query_string += " AND meta @> '" + query_params["meta-not"].to_json + "'"
+                                    end
+                                end
+                                @store = Store.where(query_string).where.not(not_query_string).order(id: :asc)
+                            else
+                                @store = Store.where('item @> ?', query_params.to_json).order(id: :asc)
+                            end
                         end
                     end
                 end
                 if @store.nil?
                     render json: {"error": "not found"},
                            status: 404
+                elsif @store == []
+                    render json: {"error": "not found"},
+                           status: 404
                 else
                     if !(ENV["AUTH"].to_s == "" || ENV["AUTH"].to_s.downcase == "false")
-                        @at = Doorkeeper::AccessToken.find_by_token(doorkeeper_token.token)
+                        @at = Doorkeeper::AccessToken.find_by_token(doorkeeper_token.token) rescue nil
+                        if @at.nil?
+                            render json: {"error": "Unauthorized"},
+                                   status: 401
+                            return
+                        end
                         if @at.public_key.to_s != ""
                             @did = Did.find_by_did(@store.did)
-                            did_public_key = @did.doc["key"].split(":").first rescue ""
+                            did_doc = @did["doc"]
+                            if did_doc.is_a?(String)
+                                did_doc = JSON.parse(did_doc)
+                            end
+                            did_public_key = did_doc["key"].split(":").first rescue ""
                             if @at.public_key.to_s != did_public_key
                                 render json: {"error": "Unauthorized"},
                                        status: 401
@@ -189,6 +189,8 @@ module Api
                     store_count = @store.count rescue 1
                     if store_count > 1
                         case params[:f]
+                        when "plain"
+                            retVal = @store.select(:item)
                         when "meta"
                             retVal = @store.select(:meta,:id,:dri,:schema)
                         else
@@ -199,6 +201,8 @@ module Api
                             @store = @store.first
                         end
                         case params[:f]
+                        when "plain"
+                            retVal = @store.item
                         when "meta"
                             retVal = {meta: @store.meta, id: @store.id, dri: @store.dri, schema: @store.schema}
                         else
@@ -210,47 +214,99 @@ module Api
                     if store_count == 1
                         retVal = JSON.parse(retVal.to_json)
                         response_object = {}
-                        if !retVal["item"].nil?
-                            if retVal["item"].is_a?(String)
-                                response_object["data"] = JSON.parse(retVal["item"])
+                        case params[:f]
+                        when "plain"
+                            if retVal["item"].nil?
+                                if retVal.is_a?(String)
+                                    response_object = JSON.parse(retVal)
+                                else
+                                    response_object = retVal
+                                end
                             else
-                                response_object["data"] = retVal["item"]
-                            end
-                        end
-                        if retVal["meta"].nil?
-                            if !retVal["schema"].nil?
-                                retVal["meta"]={"schema": retVal["schema"]}
+                                if retVal["item"].is_a?(String)
+                                    response_object["data"] = JSON.parse(retVal["item"])
+                                else
+                                    response_object["data"] = retVal["item"]
+                                end
                             end
                         else
-                            if retVal["meta"].is_a?(String)
-                                response_object["meta"] = JSON.parse(retVal["meta"])
+                            if retVal["item"].nil?
+                                if params[:f] != "meta"
+                                    if retVal.is_a?(String)
+                                        response_object["data"] = JSON.parse(retVal)
+                                    else
+                                        response_object["data"] = retVal
+                                    end
+                                end
                             else
-                                response_object["meta"] = retVal["meta"]
+                                if retVal["item"].is_a?(String)
+                                    response_object["data"] = JSON.parse(retVal["item"])
+                                else
+                                    response_object["data"] = retVal["item"]
+                                end
                             end
-                            response_object["meta"]["schema"] = retVal["schema"]
+                            if retVal["meta"].nil? || retVal["meta"] == {}
+                                if !retVal["schema"].nil?
+                                    retVal["meta"]={"schema": retVal["schema"]}
+                                end
+                            else
+                                if retVal["meta"].is_a?(String)
+                                    response_object["meta"] = JSON.parse(retVal["meta"])
+                                else
+                                    response_object["meta"] = retVal["meta"]
+                                end
+                                if !retVal["schema"].nil?
+                                    response_object["meta"]["schema"] = retVal["schema"]
+                                end
+                            end
+                            response_object["id"] = retVal["id"]
+                            response_object["dri"] = retVal["dri"]
                         end
-                        response_object["id"] = retVal["id"]
-                        response_object["dri"] = retVal["dri"]
                     else
                         response_array = []
                         iteration_object = retVal.dup
                         iteration_object.each do |i|
                             retVal = JSON.parse(i.to_json)
                             response_object = {}
-                            if !retVal["item"].nil?
-                                response_object["data"] = retVal["item"]
-                            end
-                            if retVal["meta"].nil?
-                                if !retVal["schema"].nil?
-                                    retVal["meta"]={"schema": retVal["schema"]}
+                            case params[:f]
+                            when "plain"
+                                if retVal["item"].nil?
+                                    if retVal.is_a?(String)
+                                        response_object = JSON.parse(retVal)
+                                    else
+                                        response_object = retVal
+                                    end
+                                else
+                                    if retVal["item"].is_a?(String)
+                                        response_object = JSON.parse(retVal["item"])
+                                    else
+                                        response_object = retVal["item"]
+                                    end
                                 end
                             else
-                                response_object["meta"] = retVal["meta"]
-                                response_object["meta"]["schema"] = retVal["schema"]
+                                if retVal["item"].nil?
+                                    if params[:f] != "meta"
+                                        response_object["data"] = retVal
+                                    end
+                                else
+                                    response_object["data"] = retVal["item"]
+                                end
+                                if retVal["meta"].nil?
+                                    if !retVal["schema"].nil?
+                                        retVal["meta"]={"schema": retVal["schema"]}
+                                    end
+                                else
+                                    response_object["meta"] = retVal["meta"]
+                                    if !retVal["schema"].nil?
+                                        response_object["meta"]["schema"] = retVal["schema"]
+                                    end
+                                end
+                                response_object["id"] = retVal["id"]
+                                response_object["dri"] = retVal["dri"]
                             end
-                            response_object["id"] = retVal["id"]
-                            response_object["dri"] = retVal["dri"]
-                            response_array << response_object
+                            if response_object != {}
+                                response_array << response_object
+                            end
                         end
                         response_object = response_array
                     end
@@ -267,10 +323,6 @@ module Api
 
             def update
                 input = params.permit!["data"].to_hash rescue nil
-                input_meta = params.permit!["meta"].to_hash rescue nil
-                if !input_meta.nil?
-                    input = params.permit!.except(:format, "format", :controller, "controller", :action, "action", :store, "store").to_hash rescue nil
-                end
                 if input.nil?
                     input = params.permit!.except(:format, "format", :controller, "controller", :action, "action", :store, "store", :id, "id", :dri, "dri").to_hash rescue nil
                 end

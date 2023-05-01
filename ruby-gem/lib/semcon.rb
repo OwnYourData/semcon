@@ -7,11 +7,16 @@ require 'semcon/basic'
 
 class Semcon
     def self.write(payload, target, options)
-        write_payload = {"content": payload, "meta": {}}
+        write_payload = {"data": payload, "meta": {}}
         if !options[:meta].nil?
             write_payload[:meta] = options[:meta]
         end
         record_dri = Oydid.hash(Oydid.canonical(write_payload))
+
+puts "Payload (semconlib)"
+puts write_payload.to_json
+puts "DRI (semconlib): " + record_dri.to_s
+
         target_url, err_msg = host_from_did(target, "DecentralizedWebNode", options)
         if target_url.nil? || err_msg != ""
             puts "Error: " +  err_msg.to_s
@@ -60,9 +65,17 @@ class Semcon
         # puts JSON.pretty_generate(retVal.parsed_response)
 
         err_msg = ""
-        did = retVal.parsed_response["did"].to_s rescue nil
-        if did.nil?
-            err_msg = retVal.parsed_response["error"] rescue nil
+        did = ""
+        if retVal.code != 200
+            err_msg = retVal.parsed_response["error"] rescue ""
+            if err_msg == ""
+                err_msg = "error " + retVal.code.to_s
+            end
+        else
+            did = retVal.parsed_response["did"].to_s rescue nil
+            if did.nil?
+                err_msg = retVal.parsed_response["error"] rescue nil
+            end
         end
         return [did, err_msg]
     end

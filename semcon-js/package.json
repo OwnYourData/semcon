@@ -1,0 +1,30 @@
+{
+  "name": "semcon",
+  "description": "accessing Semantic Containers",
+  "version": "0.0.1",
+  "author": "Christoph Fabianek",
+  "license": "MIT",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com/OwnYourData/semcon"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "Semantic Container"
+  ],
+  "scripts": {
+    "start": "tsc -w",
+    "build": "tsc",
+    "test": "node ./test/index.js"
+  },
+  "devDependencies": {
+    "@types/node": "^16.11.11",
+    "typescript": "^4.5.2"
+  },
+  "dependencies": {
+    "axios": "^0.24.0"
+  }
+}

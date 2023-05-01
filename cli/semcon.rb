@@ -111,7 +111,11 @@ end
 case operation.to_s
 when "write"
     retVal, err_msg = Semcon.write(payload, target, options)
-    puts retVal.to_s
+    if err_msg.to_s == ""
+        puts retVal.to_s
+    else
+        puts "Error: " + err_msg.to_s
+    end
 when "read"
     # puts "source: " + target.to_s
     retVal = ["error"]
