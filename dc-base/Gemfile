@@ -11,11 +11,12 @@ gem "rails", "~> 7.0"
 gem "pg"
 gem "puma"
 gem "rack-cors"
-gem "oydid", '~> 0.5.4'
+gem "oydid", '~> 0.5.5'
 gem 'doorkeeper'
 gem 'responders'
 gem 'pagy'
 gem 'rswag'
+gem 'simple_dag'
 
 eval_gemfile 'Gemfile.extend'
 

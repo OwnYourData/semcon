@@ -1,4 +1,4 @@
-openapi: 3.0.1
+openapi: 3.0.0
 info:
   title: OYDID API
   version: v1
@@ -67,6 +67,21 @@ paths:
           - name: id
             in: path
             required: true
+            schema:
+              type: string
+      responses:
+        "200":
+          description: success
+  /log/{id}/item:
+    get:
+      summary: retriev specific log record
+      tags:
+        - Log
+      parameters:
+          - name: id
+            in: path
+            required: true
+            description: hash value of log record
             schema:
               type: string
       responses:

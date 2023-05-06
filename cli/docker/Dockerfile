@@ -1,10 +1,10 @@
-FROM ruby:2.5.9-alpine
+FROM ruby:2.6.9-alpine
 MAINTAINER "Christoph Fabianek" christoph@ownyourdata.eu
 
 RUN addgroup -S user && \
     adduser -S user -G user && \
     apk add --no-cache libsodium-dev git make gcc musl-dev jq bash curl && \
-    gem install httparty ed25519 multibases multihashes multicodecs optparse rbnacl dag uri oydid && \
+    gem install httparty ed25519 multibases multihashes multicodecs optparse rbnacl simple_dag uri oydid && \
     gem install json-canonicalization -v 0.2.1 && \
     gem install securerandom -v 0.1.1 && \
     gem update && \
