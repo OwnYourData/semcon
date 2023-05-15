@@ -1,4 +1,5 @@
 import axios, { AxiosResponse } from 'axios';
+import { CheckUserResponse } from "./models/CheckUserResponse";
 
 interface user_PostData {
     username: string;
@@ -22,15 +23,19 @@ export function getSemcon(
     async function checkUser(
         username: string,
         password: string
-    ): Promise<string> {
-        const data: user_PostData = {
-            username: username,
-            password: password,
-        };
-        const retVal: AxiosResponse = await axios.post(`${baseUrl}/checkUser`, data, {
-            headers: {'Content-Type': 'application/json'}
-        });
-        return retVal.data;
+    ): Promise<CheckUserResponse> {
+        try {
+            const data: user_PostData = {
+                username: username,
+                password: password,
+            };
+            const retVal: AxiosResponse<CheckUserResponse> = await axios.post(`${baseUrl}/checkUser`, data, {
+                 headers: {'Content-Type': 'application/json'}
+            });
+            return retVal.data;
+        } catch(error){
+            return Promise.reject(error);
+        }
     }
 
     async function backup(
