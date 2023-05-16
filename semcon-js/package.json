@@ -1,7 +1,7 @@
 {
   "name": "semcon",
   "description": "accessing Semantic Containers",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": "Christoph Fabianek",
   "license": "MIT",
   "main": "index.js",

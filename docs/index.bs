@@ -1,0 +1,46 @@
+<pre class='metadata'>
+Title: Semantic Container
+Shortname: semcon-spec
+Level: 1
+Status: w3c/CG-DRAFT
+Group: w3c-ccg
+URL: https://ownyourdata.github.io/semcon/
+
+Editor: Christoph Fabianek, OwnYourData https://OwnYourData.eu, christoph@ownyourdata.eu, https://www.linkedin.com/in/fabianek/
+
+Abstract: Draft recommendations for use of Semantic Container as transient data store
+Markup Shorthands: markdown yes
+</pre>
+
+<pre class="biblio">
+{
+    "MULTIBASE": {
+        "href": "https://tools.ietf.org/html/draft-multiformats-multibase",
+        "title": "IETF Multibase Data Format specification"
+    },
+    "MULTIHASH": {
+        "href": "https://github.com/multiformats/multihash",
+        "title": "Multihash - protocol for differentiating outputs from various well-established cryptographic hash functions"
+    }
+}
+</pre>
+
+This specification is not a W3C Standard nor is it on the W3C Standards Track. Learn more about [W3C Community and Business Groups](https://www.w3.org/community/). [GitHub Issues](https://github.com/OwnYourData/oydid/issues) are preferred for discussion of this specification.
+
+
+## History ## {#history}
+
+* Version 0.1: 17 May 2023 (initial public release, current version)
+
+Introduction {#intro}
+============
+
+tbd
+
+
+
+Reference Implementation {#implementation}
+========================
+
+Work in progress as part of a research project funded by NGI ONTOCHAIN
+
