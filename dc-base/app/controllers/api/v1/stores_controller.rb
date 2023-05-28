@@ -11,7 +11,7 @@ module Api
             after_action { pagy_headers_merge(@pagy) if @pagy }
 
             def write
-                input = params.permit!["data"].to_hash rescue nil
+                input = params.permit!["data", "meta"].to_hash.transform_keys(&:to_s) rescue nil
                 did_document = params.permit!["did-document"].to_hash rescue nil
                 did_log = params.permit!["did-log"] rescue nil
                 if input.nil?
@@ -25,13 +25,12 @@ module Api
                            status: 400
                     return
                 end
-
                 meta_data = nil
                 schema = nil
                 if !did_document.nil?
                     # DID
                     item_data = input["data"] rescue nil
-                    meta_data = input["meta"].except(:schema, "schema") rescue nil
+                    meta_data = input["meta"] #.except(:schema, "schema") rescue nil
                     schema = input["meta"]["schema"] rescue nil
                 else
                     if input.is_a?(Array) || input["data"].nil?
@@ -40,7 +39,7 @@ module Api
                             item_data = input
                         else
                             item_data = input.except(:meta, "meta", :schema, "schema")
-                            meta_data = input["meta"].except(:schema, "schema") rescue nil
+                            meta_data = input["meta"] #.except(:schema, "schema") rescue nil
                             schema = input["meta"]["schema"] rescue nil
                         end
                     else
@@ -52,12 +51,12 @@ module Api
                             else
                                 item_data = input["data"].except(:meta, "meta", :schema, "schema")
                             end
-                            meta_data = input["meta"].except(:schema, "schema") rescue nil
+                            meta_data = input["meta"] #.except(:schema, "schema") rescue nil
                             schema = input["meta"]["schema"] rescue nil
                         else
                             # Legacy Structured data
                             item_data = input["data"]["content"]
-                            meta_data = input["data"]["meta"].except(:schema, "schema") rescue nil
+                            meta_data = input["data"]["meta"] #.except(:schema, "schema") rescue nil
                             schema = input["data"]["meta"]["schema"] rescue nil
                         end
                     end
@@ -67,7 +66,7 @@ module Api
                     item_data.each do |i|
                         if meta_data.nil?
                             i_data = i.except(:meta, "meta", :schema, "schema")
-                            m_data = i["meta"].except(:schema, "schema") rescue nil
+                            m_data = i["meta"] #.except(:schema, "schema") rescue nil
                             schema = i["meta"]["schema"] rescue nil
                             i_retVal = write_item(i_data, m_data, schema, nil, nil)
                         else
@@ -230,6 +229,7 @@ module Api
                                 end
                             end
                         else
+                            schema = nil
                             if retVal["item"].nil?
                                 if params[:f] != "meta"
                                     if retVal.is_a?(String)
@@ -296,7 +296,11 @@ module Api
                                         retVal["meta"]={"schema": retVal["schema"]}
                                     end
                                 else
-                                    response_object["meta"] = retVal["meta"]
+                                    if retVal["meta"].is_a?(String)
+                                        response_object["meta"] = JSON.parse(retVal["meta"])
+                                    else
+                                        response_object["meta"] = retVal["meta"]
+                                    end
                                     if !retVal["schema"].nil?
                                         response_object["meta"]["schema"] = retVal["schema"]
                                     end
@@ -357,20 +361,25 @@ module Api
                         item_data = input
                     else
                         item_data = input.except(:meta, "meta", :schema, "schema")
-                        meta_data = input["meta"].except(:schema, "schema") rescue nil
+                        meta_data = input["meta"] #.except(:schema, "schema") rescue nil
                         schema = input["meta"]["schema"] rescue nil
                     end
                 else
-                    if input["data"]["content"].nil?
+                    data_content = input["data"]["content"] rescue nil
+                    if data_content.nil?
                         # Plain data
-                        item_data = input["data"].except(:meta, "meta", :schema, "schema")
-                        meta_data = input["meta"].except(:schema, "schema") rescue nil
+                        if input["data"].is_a?(Array)
+                            item_data = input["data"]
+                        else
+                            item_data = input["data"].except(:meta, "meta", :schema, "schema")
+                        end
+                        meta_data = input["meta"] #.except(:schema, "schema") rescue nil
                         schema = input["meta"]["schema"] rescue nil
                     else
                         # Legacy Structured data
                         item_data = input["data"]["content"]
-                        meta_data = input["data"]["meta"].except(:schema, "schema") rescue nil
-                        schema = input["meta"]["schema"] rescue nil
+                        meta_data = input["data"]["meta"] #.except(:schema, "schema") rescue nil
+                        schema = input["data"]["meta"]["schema"] rescue nil
                     end
                 end
                 if meta_data.nil?
