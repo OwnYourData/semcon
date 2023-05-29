@@ -1,0 +1,1 @@
+curl -H "Content-Type: application/json" -d @- -X POST $SC_HOST/api/data

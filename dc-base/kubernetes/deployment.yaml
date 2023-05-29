@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: storage-oc3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: storage-oc3
+  template:
+    metadata:
+      labels:
+        app: storage-oc3
+    spec:
+      containers:
+      - name: storage-oc3
+        image: oydeu/dc-base:latest
+        ports:
+        - containerPort: 3000
+        env:
+          - name: LANG
+            value: C.UTF-8
+          - name: RAILS_LOG_TO_STDOUT
+            value: "TRUE"
+          - name: RAILS_SERVE_STATIC_FILES
+            value: "TRUE"
+          - name: RAILS_ENV
+            value: production
+          - name: RAILS_CONFIG_HOSTS
+            value: "storage-oc3.data-container.net"
+          - name: DC_DB
+            value: kubernetes
+          - name: DB2_HOST
+            value: pg_pod_name.default.svc.cluster.local
+          - name: DB2_NAME
+            value: storage_oc3
+          - name: DB2_USER
+            value: postgres
+          - name: POSTGRES2_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: general-secrets
+                key: db2-passwd
+          - name: DEFAULT_DID_OAUTH_APP
+            value: "oydid"
+          - name: DEFAULT_VC_OAUTH_APP
+            value: "oydid-vc"
