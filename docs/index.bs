@@ -37,10 +37,56 @@ Introduction {#intro}
 
 tbd
 
+## Terminology ## {#terminology}
+
+This document uses the following terms as defined in external specifications and defines terms specific to Semantic Container.
+
+<div dfn-for=terms export>
+    : <dfn lt=DRIs>DRI</dfn>
+    :: A **D**ecentralized **R**esource **I**dentifier represents a content based address for a dataset. Within SemCon Multihash [[MULTIHASH]] (default: `sha2-256`) is used for hashing a JSON object and Multibase [[MULTIBASE]] (default: `base58-btc`) for encoding the hash value.
+
+</div>
+
+## Design Goals and Rationale ## {#goals}
+
+SemCon satisfies the following design goals:
+
+* **Open:** all components are open source, free to use (incl. commercially), and publicly accessible (Github, public Repository)    
+* **Extensible:** design is inherently supposed to be extended through own definitions, extensions, concepts    
+* **Compatible:** allow seamlessly switching between data formats to use the best technology for the given use case
+* **Ease of use:** make it as simple as possible (but not simpler!) through documentation (e.g., tutorials, examples) and UI components (databud)
+* **Focus on Semantic Web:** build on top of and make use of the Semantic Web Stack
+* **Decentralised:** avoid any centralized components or addressing (i.e., use decentralized resource identifiers - [=terms/DRIs=] - where possible) 
+
+## Motivation ## {#motivation}
+
+tbd
+
+
+Features {#features}
+========
+
+tbd
+
+
+Tools {#tools}
+=====
+
+Repository {#repository}
+----------
+
+tbd
+
+
+Command Line Tool {#cli}
+-----------------
+
+tbd
 
 
 Reference Implementation {#implementation}
 ========================
 
-Work in progress as part of a research project funded by NGI ONTOCHAIN
+tbd
 
+This project has received funding from the European Union’s Horizon 2020 research and innovation program through the [NGI ONTOCHAIN program](https://ontochain.ngi.eu/) under cascade funding agreement No 957338.
