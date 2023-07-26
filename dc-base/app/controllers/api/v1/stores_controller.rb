@@ -3,6 +3,7 @@ module Api
         class StoresController < ApiController
             include Pagy::Backend
             include StoresHelper
+            include HooksHelper
 
             rescue_from ActionDispatch::Http::Parameters::ParseError do |exception|
                 render status: 400, json: { errors: [ exception.cause.message ] }
@@ -77,6 +78,7 @@ module Api
                 else
                     retVal = write_item(item_data, meta_data, schema, did_document, did_log)
                 end
+                write_hook(retVal)
                 render json: retVal,
                        status: 200
 
@@ -319,7 +321,7 @@ module Api
                             response_object = [response_object]
                         end
                     end
-
+                    read_hook(response_object)
                     render json: response_object,
                            status: 200
                 end
@@ -403,7 +405,10 @@ module Api
                     @store.dri = new_dri
                     @store.schema = schema
                     @store.save
-                    render json: {"dri": new_dri.to_s, "id": @store.id},
+
+                    retVal = {"dri": new_dri.to_s, "id": @store.id}
+                    update_hook(retVal)
+                    render json: retVal,
                            status: 200
                 else
                     if Rails.configuration.database_configuration[Rails.env]["adapter"] == "postgresql"
@@ -423,12 +428,13 @@ module Api
                     old_id = @store.id
                     if old_id.to_s != id.to_s
                         @store.destroy
-                        render json: {"dri": new_dri.to_s, "id": @store.id, "removed":{"dri": old_dri, "id": old_id}},
-                               status: 200
+                        retVal = {"dri": new_dri.to_s, "id": @store.id, "removed":{"dri": old_dri, "id": old_id}}
                     else
-                        render json: {"dri": new_dri.to_s, "id": @store.id},
-                               status: 200
+                        retVal = {"dri": new_dri.to_s, "id": @store.id}
                     end
+                    update_hook(retVal)
+                    render json: retVal,
+                           status: 200
                 end
             end
 
@@ -451,7 +457,9 @@ module Api
                 id = @store.id
                 @store.destroy
 
-                render json: {"dri": dri.to_s, "id": id},
+                retVal = {"dri": dri.to_s, "id": id}
+                delete_hook(retVal)
+                render json: retVal,
                        status: 200
 
             end
