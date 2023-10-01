@@ -4,6 +4,8 @@ import { Paging, VaultItem, VaultMeta, VaultMinMeta } from './interfaces';
 
 export const parseVaultItemMeta = (data: any): VaultMeta => ({
   id: data.id,
+  createdAt: new Date(data.created_at),
+  updatedAt: new Date(data.updated_at),
   dri: data.dri,
   // we always provide a fallback value for meta
   meta: data.meta ?? {},

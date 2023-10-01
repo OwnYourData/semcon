@@ -42,6 +42,8 @@ export interface VaultPostItem {
 
 export interface VaultItem {
   id: number;
+  createdAt: Date;
+  updatedAt: Date;
   meta: VaultMetaObject;
   data: any;
   dri?: string;
