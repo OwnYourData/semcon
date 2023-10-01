@@ -2,13 +2,26 @@
   <div class="row">
     <div class="col-md-6">
       <div class="top-container">
-        <h3 class="heading">ID</h3>
+        <h3 class="heading">System</h3>
       </div>
-      <raw-json :data="idData" />
+      <raw-json :data="systemData" />
       <div class="top-container">
         <h3 class="heading">Meta</h3>
+        <b-checkbox
+          class="check"
+          v-model="isMetaEditable"
+        >Editable</b-checkbox>
       </div>
-      <raw-json :data="meta" />
+      <b-textarea
+        v-if="isMetaEditable"
+        v-model="editableMeta"
+        rows="10"
+        class="textarea"
+      />
+      <raw-json
+        v-else
+        :data="item.meta"
+      />
     </div>
     <div class="col-md-6">
       <div class="top-container">
@@ -19,13 +32,13 @@
         > (encrypted)</span>
         <b-checkbox
           class="check"
-          v-model="isEditable"
+          v-model="isDataEditable"
         >Editable</b-checkbox>
         <custom-button
           class="btn-save"
           @click="save"
           :type="isSaving ? 'primary-outline' : undefined"
-          v-if="isEditable"
+          v-if="isDataEditable"
           :disabled="isSaving"
         >
           <spinner v-if="isSaving" />
@@ -37,9 +50,9 @@
       </div>
 
       <b-textarea
-        v-if="isEditable"
+        v-if="isDataEditable"
         v-model="editableData"
-        rows="10"
+        rows="20"
         class="textarea"
       />
       <raw-json
@@ -59,8 +72,10 @@ import CustomButton from './Button.vue';
 import Spinner from './Spinner.vue';
 
 interface Data {
-  isEditable: boolean;
+  isDataEditable: boolean;
+  isMetaEditable: boolean;
   editableData: string;
+  editableMeta: string;
 }
 
 export default Vue.extend({
@@ -78,8 +93,10 @@ export default Vue.extend({
     }
   },
   data: (): Data => ({
-    isEditable: false,
+    isDataEditable: false,
+    isMetaEditable: false,
     editableData: '',
+    editableMeta: '',
   }),
   created() {
     this.resetEditableData();
@@ -87,6 +104,7 @@ export default Vue.extend({
   methods: {
     resetEditableData() {
       this.editableData = JSON.stringify(this.item.data, undefined, 2);
+      this.editableMeta = JSON.stringify(this.item.meta, undefined, 2);
     },
     save() {
       console.log('save')
@@ -103,19 +121,25 @@ export default Vue.extend({
         this.item.data = JSON.parse(value);
       } catch { /* */ }
     },
+    editableMeta(value: string) {
+      try {
+        this.item.meta = JSON.parse(value);
+      } catch { /* */ }
+    },
     item() {
       this.resetEditableData();
     },
   },
   computed: {
-    idData(): any {
-      return {
-        id: this.item.id,
-        dri: this.item.dri,
-      };
-    },
-    meta(): any {
-      return this.item.meta;
+    systemData(): any {
+      const copy = { ...this.item };
+      // @ts-ignore
+      delete copy.raw;
+      // @ts-ignore
+      delete copy.data;
+      // @ts-ignore
+      delete copy.meta;
+      return copy;
     },
     isEncrypted(): boolean {
       return this.item.isEncrypted;
@@ -141,5 +165,6 @@ export default Vue.extend({
 
 .textarea {
   font-family: monospace;
+  font-size: 0.85em;
 }
 </style>
