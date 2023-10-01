@@ -2,6 +2,10 @@
   <div class="row">
     <div class="col-md-6">
       <div class="top-container">
+        <h3 class="heading">ID</h3>
+      </div>
+      <raw-json :data="idData" />
+      <div class="top-container">
         <h3 class="heading">Meta</h3>
       </div>
       <raw-json :data="meta" />
@@ -104,13 +108,14 @@ export default Vue.extend({
     },
   },
   computed: {
+    idData(): any {
+      return {
+        id: this.item.id,
+        dri: this.item.dri,
+      };
+    },
     meta(): any {
-      const copy = { ...this.item };
-      delete copy.data;
-      // @ts-ignore
-      delete copy.raw;
-
-      return copy;
+      return this.item.meta;
     },
     isEncrypted(): boolean {
       return this.item.isEncrypted;
