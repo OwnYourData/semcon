@@ -20,9 +20,9 @@
 <script lang="ts">
 import Vue from 'vue'
 export default Vue.extend({
-  props: {
-    data: Object,
-  },
+  props: [
+    'data',
+  ],
   computed: {
     jsonContent(): string {
       return JSON.stringify(this.data, null, 2).trim();
