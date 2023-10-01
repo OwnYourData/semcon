@@ -38,7 +38,7 @@
           class="btn-save"
           @click="save"
           :type="isSaving ? 'primary-outline' : undefined"
-          v-if="isDataEditable"
+          v-if="isDataEditable || isMetaEditable"
           :disabled="isSaving"
         >
           <spinner v-if="isSaving" />
