@@ -98,7 +98,7 @@ export default Vue.extend({
 
       params.append('viewMode', 'embedded');
       params.append('schemaDri', this.schemaDri);
-      params.append('data', JSON.stringify(this.data));
+      params.append('data', encodeURIComponent(JSON.stringify(this.data)));
 
       this.iFrameSrc = url.toString();
     },
