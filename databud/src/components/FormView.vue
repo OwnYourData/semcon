@@ -74,12 +74,23 @@ export default Vue.extend({
 
       switch (evt.data?.type) {
         case 'update':
-          this.isLoading = false;
+          if (this.isLoading) {
+            this.isLoading = false;
+            // now set data for the first time
+            // as we don't pass it via URL query parameter
+            this.setData();
+          }
           if (iframe)
             iframe.style.height = evt.data.documentHeight + 'px';
           break;
         case 'data':
-          this.$emit('change', evt.data.evt);
+          // only receive data updates, if the view is not in loading state
+          // otherwise the data update coming from soya form might override
+          // our internal data, which has not yet been posted to the soya form
+          // and would therefore be lost
+          if (!this.isLoading) {
+            this.$emit('change', evt.data.evt);
+          }
           break;
       }
     });
@@ -98,9 +109,14 @@ export default Vue.extend({
 
       params.append('viewMode', 'embedded');
       params.append('schemaDri', this.schemaDri);
-      params.append('data', encodeURIComponent(JSON.stringify(this.data)));
 
       this.iFrameSrc = url.toString();
+    },
+    setData() {
+      this.iframe?.contentWindow?.postMessage({
+        type: 'data',
+        data: this.data,
+      }, '*');
     },
   },
   watch: {
@@ -108,10 +124,7 @@ export default Vue.extend({
       this.reload();
     },
     data() {
-      this.iframe?.contentWindow?.postMessage({
-        type: 'data',
-        data: this.data,
-      }, '*');
+      this.setData();
     },
     iFrameSrc() {
       this.$emit('iFrameSrcChange', this.iFrameSrc);
