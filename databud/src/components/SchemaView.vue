@@ -278,7 +278,13 @@ export default Vue.extend({
     },
     getListTitle(vaultItem: VaultItem) {
       if (this.selectedListLabelTemplate)
-        return Handlebars.compile(this.selectedListLabelTemplate)(vaultItem.data);
+        return Handlebars.compile(this.selectedListLabelTemplate)({
+          // item data can directly accessed with a handlebar template like: {{property}}
+          ...vaultItem.data,
+          // if one wants to access meta information the template is like: {{$item.meta.property}}
+          // or if one wants to access item information the template is like: {{$item.id}} or {{$item.updatedAt}}
+          $item: vaultItem,
+        });
       else
         return vaultItem.id;
     },
