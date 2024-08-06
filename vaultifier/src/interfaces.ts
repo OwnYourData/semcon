@@ -113,11 +113,17 @@ export interface OAuthIdentityProvider {
   applicationId: string,
 }
 
+export interface OAuthExternalProvider {
+  link: string,
+  title: i18nObject,
+  imageUrl: string,
+}
+
 export interface VaultSupport {
   repos: boolean,
   authentication: boolean,
   scopes?: string[],
-  oAuth?: (OAuthSupport | OAuthIdentityProvider)[],
+  oAuth?: (OAuthSupport | OAuthIdentityProvider | OAuthExternalProvider)[],
 }
 
 export interface VaultInfo {

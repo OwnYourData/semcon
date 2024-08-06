@@ -5,6 +5,7 @@ import { UnauthorizedError } from './errors';
 import { getPaging, parsePostResult, parseVaultItem, parseVaultItemMeta } from './helpers';
 import {
   MultiResponse,
+  OAuthExternalProvider,
   OAuthSupport,
   OAuthType,
   PrivateKeyCredentials,
@@ -83,7 +84,7 @@ export class Vaultifier {
       return this.supports;
 
     const { data } = await this.communicator.get(this.urls.active);
-    const oAuth: (OAuthSupport | OAuthIdentityProvider)[] = [];
+    const oAuth: (OAuthSupport | OAuthIdentityProvider | OAuthExternalProvider)[] = [];
 
     if (Array.isArray(data.oauth)) {
       for (const provider of data.oauth) {
@@ -92,6 +93,13 @@ export class Vaultifier {
           provider.type === OAuthType.AUTHORIZATION_CODE
         ) {
           oAuth.push(provider);
+        }
+        else if (provider.link) {
+          oAuth.push({
+            link: provider.link,
+            title: provider.title,
+            imageUrl: provider.title.pic,
+          });
         }
         else {
           oAuth.push({
