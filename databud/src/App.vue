@@ -46,7 +46,7 @@ import { setInstance as setVaultifier } from './services';
 import Spinner from './components/Spinner.vue'
 import NavBar from './components/NavBar.vue'
 import Login, { Data as LoginData } from './components/Login.vue'
-import { Vaultifier, VaultEncryptionSupport, VaultSupport, VaultInfo, VaultifierWeb, OAuthIdentityProvider, OAuthSupport, } from 'vaultifier';
+import { Vaultifier, VaultEncryptionSupport, VaultSupport, VaultInfo, VaultifierWeb, OAuthIdentityProvider, OAuthSupport, OAuthExternalProvider } from 'vaultifier';
 import { RoutePath } from './router';
 import { RouteParams } from "./router/routes";
 import { IStore } from "./store";
@@ -99,7 +99,7 @@ export default Vue.extend({
       if (itemId && this.$router.currentRoute.path !== RoutePath.ITEM_VIEW)
         this.$router.push(RoutePath.ITEM_VIEW);
     },
-    async tryInitializeVaultifier(credentials?: OAuthIdentityProvider | LoginData) {
+    async tryInitializeVaultifier(credentials?: OAuthIdentityProvider | OAuthExternalProvider | LoginData) {
       this.isInitializing = true;
 
       let vaultifier: Vaultifier | undefined = undefined;
@@ -120,10 +120,17 @@ export default Vue.extend({
             await vw.vaultifier.initialize();
           }
           // external authentication provider
-          else
+          else if ((credentials as OAuthExternalProvider).link) {
+            // just redirect to the external oAuth provider
+            window.location.href = (credentials as OAuthExternalProvider).link;
+            return;
+          }
+          // external authentication provider
+          else {
             await vw.initialize({
               oAuthType: credentials as OAuthIdentityProvider,
             });
+          }
         }
         else
           await vw.initialize();
@@ -194,7 +201,7 @@ Try looking into the browser console to gain more insights on the problem.`;
     isUiFluid(): boolean {
       return this.state.ui.isFluid;
     },
-    identityProviders(): (OAuthSupport | OAuthIdentityProvider)[] | undefined {
+    identityProviders(): (OAuthSupport | OAuthIdentityProvider | OAuthExternalProvider)[] | undefined {
       return this.vaultSupport?.oAuth;
     }
   },
