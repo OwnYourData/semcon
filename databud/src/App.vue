@@ -6,6 +6,8 @@
         :title="title"
         :description="description"
         :url="vaultUrl"
+        :hasLogout="hasLogout"
+        @logout="isLoggedIn = false"
       >
       </nav-bar>
     </b-container>
@@ -203,6 +205,9 @@ Try looking into the browser console to gain more insights on the problem.`;
     },
     identityProviders(): (OAuthSupport | OAuthIdentityProvider | OAuthExternalProvider)[] | undefined {
       return this.vaultSupport?.oAuth;
+    },
+    hasLogout(): boolean {
+      return this.vaultSupport?.authentication === true && this.isLoggedIn;
     }
   },
   watch: {

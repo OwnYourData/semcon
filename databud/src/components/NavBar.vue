@@ -68,6 +68,8 @@ interface Data {
   workingAction?: Action,
 }
 
+const INTERNAL_ACTION = 'internal';
+
 export default Vue.extend({
   props: {
     encryptionSupport: Object as PropType<VaultEncryptionSupport>,
@@ -75,6 +77,7 @@ export default Vue.extend({
     title: String as PropType<string>,
     description: String as PropType<string | undefined>,
     url: String as PropType<string | undefined>,
+    hasLogout: Boolean as PropType<boolean | undefined>,
   },
   data: (): Data => ({
     workingAction: undefined,
@@ -82,7 +85,12 @@ export default Vue.extend({
   methods: {
     async executeAction(action: Action) {
       this.workingAction = action;
-      await executeAction(action, getInstance(), this);
+
+      if (action.method === INTERNAL_ACTION)
+        this.$emit(action.key, action);
+      else
+        await executeAction(action, getInstance(), this);
+
       this.workingAction = undefined;
     },
     goHome() {
@@ -110,7 +118,21 @@ export default Vue.extend({
         return 'lock';
     },
     actions(): Action[] {
-      return getActionsFromConfig('settings', 'actions');
+      const actions = [
+        ...getActionsFromConfig('settings', 'actions'),
+      ];
+
+      if (this.hasLogout) {
+        actions.push({
+          key: 'logout',
+          method: INTERNAL_ACTION,
+          title: 'Logout',
+          url: '',
+          usesAuth: false,
+        });
+      }
+
+      return actions;
     },
     gearAnimation() {
       return this.workingAction ? 'spin' : undefined;
