@@ -3,4 +3,5 @@ export enum StorageKey {
   PKCE_SECRET = 'pkceSecret',
   APPLICATION_ID = 'applicationId',
   BASE_URL = 'baseUrl',
+  VAULT_CREDENTIALS = 'vault-credentials',
 }

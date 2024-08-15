@@ -577,7 +577,6 @@ export class Vaultifier {
   }
 
   private async _authorize(): Promise<string> {
-    const vaultCredentialsStorageKey = 'vault-credentials';
     let token: string;
 
     try {
@@ -626,7 +625,7 @@ export class Vaultifier {
         if (credentials?.appKey && credentials?.appSecret)
           this.options.credentials = credentials;
         else {
-          const storedCredentials = Storage.getObject<VaultCredentials>(vaultCredentialsStorageKey);
+          const storedCredentials = Storage.getObject<VaultCredentials>(StorageKey.VAULT_CREDENTIALS);
 
           if (storedCredentials) {
             this.options.credentials = storedCredentials;
@@ -656,7 +655,7 @@ export class Vaultifier {
       // we only save the credentials if they are appKey and appSecret
       // authorizationCode does not make sense to store
       if (this.options.credentials?.appKey && this.options.credentials.appSecret) {
-        Storage.set(vaultCredentialsStorageKey, this.options.credentials);
+        Storage.set(StorageKey.VAULT_CREDENTIALS, this.options.credentials);
       }
     }
     catch {

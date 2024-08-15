@@ -288,5 +288,6 @@ export class VaultifierWeb {
     Storage.remove(StorageKey.OAUTH_REDIRECT_URL);
     Storage.remove(StorageKey.APPLICATION_ID);
     Storage.remove(StorageKey.OAUTH_REDIRECT_URL);
+    Storage.remove(StorageKey.VAULT_CREDENTIALS);
   }
 }
