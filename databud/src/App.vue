@@ -7,7 +7,7 @@
         :description="description"
         :url="vaultUrl"
         :hasLogout="hasLogout"
-        @logout="isLoggedIn = false"
+        @logout="logOut"
       >
       </nav-bar>
     </b-container>
@@ -182,6 +182,10 @@ Try looking into the browser console to gain more insights on the problem.`;
     },
     logIn(credentials: LoginData) {
       this.tryInitializeVaultifier(credentials);
+    },
+    logOut() {
+      this.isLoggedIn = false;
+      VaultifierWeb.clearAuthentication();
     },
   },
   computed: {
