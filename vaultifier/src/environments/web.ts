@@ -282,4 +282,11 @@ export class VaultifierWeb {
 
     return vaultifier;
   }
+
+  clearAuthentication = async () => {
+    Storage.remove(StorageKey.PKCE_SECRET);
+    Storage.remove(StorageKey.OAUTH_REDIRECT_URL);
+    Storage.remove(StorageKey.APPLICATION_ID);
+    Storage.remove(StorageKey.OAUTH_REDIRECT_URL);
+  }
 }
