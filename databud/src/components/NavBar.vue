@@ -17,6 +17,9 @@
         :icon="encryptionIcon"
       ></b-icon>
     </b-nav-text>
+    <b-nav-text>
+      soyabud v{{subVersion}}
+    </b-nav-text>
     <b-nav-text v-if="url">
       <a :href="url">{{url}}</a>
     </b-nav-text>
@@ -103,6 +106,9 @@ export default Vue.extend({
   computed: {
     version() {
       return PACKAGE.version;
+    },
+    subVersion() {
+      return PACKAGE.subVersion;
     },
     encryptionIcon(): string | undefined {
       if (!this.encryptionSupport)

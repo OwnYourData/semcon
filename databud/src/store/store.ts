@@ -14,6 +14,26 @@ export interface IFetchVaultItems {
   schema?: Partial<VaultSchema>;
   fetchContent?: boolean;
 }
+
+// These special SOyA types are important, as for SOyA we always use
+// DRI as identifier, which is always a string
+type SoyaVaultMeta = Omit<VaultMeta, 'id'> & {
+  id: number | string;
+};
+
+type SoyaVaultMinMeta = Omit<VaultMinMeta, 'id'> & {
+  id: number | string;
+};
+
+type SoyaVaultItem = Omit<VaultItem, 'id'> & {
+  id: number | string;
+};
+
+export enum Language {
+  JSON_LD = 'json-ld',
+  YAML = 'yaml',
+}
+
 export interface IStore {
   repo: {
     all?: VaultRepo[],
@@ -25,11 +45,12 @@ export interface IStore {
     current?: SoyaDocument,
   },
   vaultItem: {
-    all: VaultMeta[],
+    all: SoyaVaultMeta[],
     allState: FetchState,
     current?: VaultItem,
     currentState: FetchState,
     paging?: Paging,
+    language: string,
   },
   ui: {
     isFluid: boolean,
@@ -84,6 +105,7 @@ export const getStore = () => {
         current: undefined,
         currentState: FetchState.NONE,
         paging: undefined,
+        language: Language.YAML,
       },
       ui: {
         isFluid: false,
@@ -108,6 +130,9 @@ export const getStore = () => {
       [MutationType.SET_VAULT_ITEM](state, payload: VaultItem) {
         state.vaultItem.current = payload;
       },
+      [MutationType.SET_VAULT_ITEM_LANGUAGE](state, payload: string) {
+        state.vaultItem.language = payload;
+      },
       [MutationType.SET_SCHEMA_DRI_TITLE](state, payload: VaultSchema) {
         const item = state.schemaDRI.all.find(x => x.dri === payload.dri);
 
@@ -128,26 +153,31 @@ export const getStore = () => {
         commit(MutationType.SET_VAULT_ITEMS_PAGING, undefined);
       },
       async [ActionType.UPDATE_VAULT_ITEM]({ state, commit, dispatch }, payload: VaultPostItem) {
-        if (payload.id) {
-          await getInstance().updateItem(payload);
-          dispatch(ActionType.FETCH_VAULT_ITEM, { id: payload.id } as VaultMinMeta);
+        let jsonld: SoyaDocument | undefined = undefined;
+        let yaml: string | undefined = undefined;
+        if (state.vaultItem.language === Language.YAML) {
+          yaml = payload.data as string;
+          jsonld = await soya.init(yaml);
         }
         else
-          await getInstance().postItem(payload);
+          jsonld = payload.data;
 
+        await soya.push(jsonld, {
+          soya_yaml: yaml,
+        });
       },
       async [ActionType.DELETE_VAULT_ITEM]({ state, commit, dispatch }, payload: VaultMeta) {
-        await getInstance().deleteItem({
-          id: payload.id,
-        });
-
-        if (state.vaultItem.current?.id === payload.id)
-          commit(MutationType.SET_VAULT_ITEM, undefined);
+        // TODO: implement
+        throw new Error('Not implemented');
       },
       async [ActionType.FETCH_SCHEMA_DRIS]({ commit, dispatch }) {
         await doFetch<VaultSchema[]>(
           commit,
-          () => getInstance().getSchemas(),
+          // TODO: provide real interface
+          async () => (await soya.query({ name: 'Person' })).map<VaultSchema>(x => ({
+            dri: x.dri,
+            title: x.name,
+          })),
           (commit, data) => {
             dispatch(ActionType.RESET_VAULT_ITEMS);
             commit(MutationType.SET_SCHEMA_DRIS, data);
@@ -191,34 +221,39 @@ export const getStore = () => {
           } catch { /* if it goes wrong we don't care */ }
         }
 
-        await doFetch<MultiResponse<VaultMeta>>(
+        await doFetch<MultiResponse<SoyaVaultMeta>>(
           commit,
           async () => {
-            let query: VaultItemsQuery | undefined = {
-              page: {
-                page,
-                size,
-              },
-            };
-            let instance: Vaultifier;
+            const schemaPath = schema?.title ?? schema?.dri;
+            if (schemaPath) {
+              // TODO: needs paging mechanism
+              const res = await soya.info(schemaPath);
+              const items = res.history.map<SoyaVaultMeta>(x => {
+                const date = new Date(x.date);
 
-            if (schema) {
-              instance = getInstance();
-              query = {
-                ...query,
-                schema: schema?.dri,
+                return {
+                  id: x.schema,
+                  dri: x.schema,
+                  createdAt: date,
+                  updatedAt: date,
+                  meta: {},
+                  raw: x,
+                };
+              });
+
+              return {
+                items,
+                paging: {
+                  current: 1,
+                  pageItems: items.length,
+                  totalItems: items.length,
+                  totalPages: 1,
+                }
               };
-            }
-            else if (repo) {
-              instance = await getInstance().fromRepo(repo.identifier);
             }
             else
               throw new Error('Schema and repo are undefined');
 
-            if (fetchContent)
-              return instance.getItems(query);
-            else
-              return instance.getMetaItems(query);
           },
           (commit, data) => {
             commit(MutationType.SET_VAULT_ITEMS, data.items);
@@ -227,13 +262,33 @@ export const getStore = () => {
           (store, state) => store.vaultItem.allState = state,
         );
       },
-      async[ActionType.FETCH_VAULT_ITEM]({ commit }, payload: VaultMinMeta) {
-        await doFetch<VaultItem>(
+      async[ActionType.FETCH_VAULT_ITEM]({ commit, state }, payload: SoyaVaultMinMeta) {
+        await doFetch<SoyaVaultItem>(
           commit,
-          () => getInstance().getItem({ id: payload.id }),
+          async () => {
+            const res = await soya.pull(payload.id as string, {
+              pullType: state.vaultItem.language === Language.YAML ? 'yaml' : 'json-ld',
+            });
+            return {
+              id: payload.id,
+              dri: payload.id.toString(),
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              isEncrypted: false,
+              meta: {},
+              raw: res,
+              data: res,
+            };
+          },
           (commit, data) => commit(MutationType.SET_VAULT_ITEM, data),
           (store, state) => store.vaultItem.currentState = state,
         )
+      },
+      async[ActionType.SET_VAULT_ITEM_LANGUAGE]({ commit, state, dispatch }, payload: Language) {
+        commit(MutationType.SET_VAULT_ITEM_LANGUAGE, payload);
+        // refetch current vault item, if needed
+        if (state.vaultItem.current)
+          dispatch(ActionType.FETCH_VAULT_ITEM, state.vaultItem.current);
       },
       async[ActionType.FETCH_SCHEMAS_TITLE]({ commit, state }) {
         const infos = await soya.info(state.schemaDRI.all.map(x => x.dri));

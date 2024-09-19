@@ -1,13 +1,15 @@
 {
   "name": "oyd-databud",
   "version": "1.4.1",
+  "subVersion": "0.1.0",
   "license": "MIT",
   "private": "true",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "dockerize": "docker build -t gebsl/oyd-databud .",
-    "deploy": "sh ./scripts/deploy.sh",
+    "deploy:databud": "BUDDY_TYPE=databud sh ./scripts/deploy.sh",
+    "deploy:soyabud": "BUDDY_TYPE=soyabud sh ./scripts/deploy.sh",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {

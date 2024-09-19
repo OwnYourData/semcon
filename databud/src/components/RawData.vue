@@ -52,7 +52,7 @@
       <vue-monaco-editor
         v-if="isDataEditable"
         class="monaco"
-        language="json"
+        :language="language"
         v-model="editableData"
       />
       <raw-json
@@ -70,6 +70,7 @@ import Vue, { PropType } from 'vue'
 import RawJson from './RawJson.vue';
 import CustomButton from './Button.vue';
 import Spinner from './Spinner.vue';
+import { Language } from '../store';
 
 interface Data {
   isDataEditable: boolean;
@@ -90,7 +91,10 @@ export default Vue.extend({
     },
     isSaving: {
       type: Boolean as PropType<boolean>,
-    }
+    },
+    language: {
+      type: String as PropType<Language | undefined>,
+    },
   },
   data: (): Data => ({
     isDataEditable: false,
@@ -103,8 +107,14 @@ export default Vue.extend({
   },
   methods: {
     resetEditableData() {
-      this.editableData = JSON.stringify(this.item.data, undefined, 2);
-      this.editableMeta = JSON.stringify(this.item.meta, undefined, 2);
+      this.editableData = this.tryJsonStringify(this.item.data);
+      this.editableMeta = this.tryJsonStringify(this.item.meta);
+    },
+    tryJsonStringify(data: any) {
+      if (typeof data === 'object')
+        return JSON.stringify(data, null, 2);
+
+      return data;
     },
     save() {
       const postItem: VaultPostItem = {
@@ -118,7 +128,10 @@ export default Vue.extend({
     editableData(value: string) {
       try {
         this.item.data = JSON.parse(value);
-      } catch { /* */ }
+      } catch {
+        // this is soyabud specific, as we also handle YAML values
+        this.item.data = value;
+      }
     },
     editableMeta(value: string) {
       try {

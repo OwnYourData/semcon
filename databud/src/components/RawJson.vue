@@ -25,7 +25,10 @@ export default Vue.extend({
   ],
   computed: {
     jsonContent(): string {
-      return JSON.stringify(this.data, null, 2).trim();
+      if (typeof this.data === 'object')
+        return JSON.stringify(this.data, null, 2).trim();
+
+      return this.data;
     }
   }
 })

@@ -11,6 +11,7 @@
       >
         <raw-data
           :item="item"
+          :language="language"
           :isSaving="isSaving"
           @save="saveVaultItem"
         ></raw-data>
@@ -59,6 +60,7 @@ import RawData from './RawData.vue';
 import FormEditView from './FormEditView.vue';
 
 import { ActionType } from '@/store/action-type';
+import { IStore } from '../store';
 
 interface Data {
   isSaving: boolean;
@@ -87,6 +89,9 @@ export default Vue.extend({
     },
     hasSchema(): boolean {
       return !!this.schemaDri;
+    },
+    language() {
+      return (this.$store.state as IStore).vaultItem.language;
     },
   },
   methods: {

@@ -51,6 +51,15 @@
                 @click="deleteSelectedVaultItem"
                 :disabled="isDeleteButtonDisabled"
               >Delete</custom-button>
+
+              <b-form-radio-group
+                id="btn-radios-pull-type"
+                v-model="language"
+                :options="languageOptions"
+                button-variant="outline-primary"
+                name="radios-btn-pull-type"
+                buttons
+              ></b-form-radio-group>
             </template>
             <b-list-group-item
               v-for="item of vaultItems"
@@ -96,7 +105,7 @@
 
 <script lang="ts">
 import Vue from 'vue';
-import { IFetchVaultItems, IStore } from '../store';
+import { IFetchVaultItems, IStore, Language } from '../store';
 import List, { RefreshObj } from '../components/List.vue';
 import CustomButton from '../components/Button.vue';
 import ChartVisualizer from '../components/ChartVisualizer.vue';
@@ -123,6 +132,10 @@ interface IData {
   selectedTabIndex: number,
   dataItemCount: number,
   dataItemPage?: number,
+
+  // soya
+  language: Language,
+  languageOptions: any[],
 }
 
 export default Vue.extend({
@@ -143,12 +156,24 @@ export default Vue.extend({
     selectedTabIndex: 0,
     dataItemCount: 50,
     dataItemPage: undefined,
+
+    // soya
+    language: Language.YAML,
+    languageOptions: [
+      { text: 'json-ld', value: Language.JSON_LD },
+      { text: 'yaml', value: Language.YAML },
+    ],
   }),
   components: {
     CustomButton,
     FormEditView,
     List,
     ChartVisualizer,
+  },
+  watch: {
+    language() {
+      this.$store.dispatch(ActionType.SET_VAULT_ITEM_LANGUAGE, this.language);
+    },
   },
   methods: {
     async initialize() {

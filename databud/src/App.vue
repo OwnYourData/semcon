@@ -44,7 +44,7 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { setInstance as setVaultifier } from './services';
+import { setInstance as setVaultifier, soya } from './services';
 import Spinner from './components/Spinner.vue'
 import NavBar from './components/NavBar.vue'
 import Login, { Data as LoginData } from './components/Login.vue'
@@ -104,46 +104,13 @@ export default Vue.extend({
     async tryInitializeVaultifier(credentials?: OAuthIdentityProvider | OAuthExternalProvider | LoginData) {
       this.isInitializing = true;
 
-      let vaultifier: Vaultifier | undefined = undefined;
+      // Here we removed quite substantial amount of code from the original data bud
+      // as we currently don't have VaultifierWeb configuration for SOyA
 
-      const vw = await VaultifierWeb.create({
-        baseUrl: ConfigService.get('endpoint', 'url'),
-        clientId: ConfigService.get('endpoint', 'clientId'),
-      });
-
-      if (vw.vaultifier)
-        this.vaultUrl = vw.vaultifier.urls.baseUrl;
-
-      try {
-        if (credentials) {
-          // APP_KEY and APP_SECRET based authentication
-          if (vw.vaultifier && isLoginData(credentials)) {
-            vw.vaultifier.setCredentials(credentials);
-            await vw.vaultifier.initialize();
-          }
-          // external authentication provider
-          else if ((credentials as OAuthExternalProvider).link) {
-            // just redirect to the external oAuth provider
-            window.location.href = (credentials as OAuthExternalProvider).link;
-            return;
-          }
-          // external authentication provider
-          else {
-            await vw.initialize({
-              oAuthType: credentials as OAuthIdentityProvider,
-            });
-          }
-        }
-        else
-          await vw.initialize();
-      } catch (e) {
-        console.error(e);
-      }
-
-      if (vw.vaultifier) {
-        vaultifier = vw.vaultifier;
-        setVaultifier(vaultifier);
-      }
+      // TODO: This is a quirky type conversion, but since vaultifier version 3.x supports the new generation of SemCons
+      // SOyA and new SemCons are currently not compatible (and thus soya-js still builds upon vaultifier version 2.x)
+      // However, for the use in this project the differences should not be noticable, thus the conversion is okayish
+      let vaultifier: Vaultifier = await soya.service.getVaultifier() as unknown as Vaultifier;
 
       if (!vaultifier) {
         this.message = `Sorry. I was not able to create a vaultifier instance.
