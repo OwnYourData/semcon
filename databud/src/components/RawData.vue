@@ -1,6 +1,6 @@
 <template>
   <div class="row">
-    <div class="col-md-6">
+    <div class="col-md-4">
       <div class="top-container">
         <h3 class="heading">System</h3>
       </div>
@@ -23,7 +23,7 @@
         :data="item.meta"
       />
     </div>
-    <div class="col-md-6">
+    <div class="col-md-8">
       <div class="top-container">
         <h3 class="heading">Content</h3>
         <span
