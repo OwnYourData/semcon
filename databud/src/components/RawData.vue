@@ -49,11 +49,11 @@
 
       </div>
 
-      <b-textarea
+      <vue-monaco-editor
         v-if="isDataEditable"
+        class="monaco"
+        language="json"
         v-model="editableData"
-        rows="20"
-        class="textarea"
       />
       <raw-json
         v-else
@@ -166,5 +166,9 @@ export default Vue.extend({
 .textarea {
   font-family: monospace;
   font-size: 0.85em;
+}
+
+.monaco {
+  max-height: 600px;
 }
 </style>
