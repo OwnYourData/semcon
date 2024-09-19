@@ -107,7 +107,6 @@ export default Vue.extend({
       this.editableMeta = JSON.stringify(this.item.meta, undefined, 2);
     },
     save() {
-      console.log('save')
       const postItem: VaultPostItem = {
         ...this.item,
       };
