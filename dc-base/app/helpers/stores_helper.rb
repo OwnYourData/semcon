@@ -9,7 +9,7 @@ module StoresHelper
         if did_document.nil?
             @store = Store.find_by_dri(dri)
             if @store.nil?
-                if Rails.configuration.database_configuration[Rails.env]["adapter"] == "postgresql"
+                if HAS_JSONB
                     @store = Store.new(item: item_data, meta: meta_data, dri: dri, schema: schema)
                 else
                     @store = Store.new
@@ -22,7 +22,7 @@ module StoresHelper
                 end
                 @store.save
             else
-                if Rails.configuration.database_configuration[Rails.env]["adapter"] == "postgresql"
+                if HAS_JSONB
                     @store.item = item_data
                     @store.meta = meta_data
                 else
@@ -37,7 +37,7 @@ module StoresHelper
             return {"dri": dri.to_s, "id": @store.id}
         else
             did = Oydid.hash(Oydid.canonical(did_document.to_json)) rescue nil
-            if Rails.configuration.database_configuration[Rails.env]["adapter"] == "postgresql"
+            if HAS_JSONB
                 @store = Store.new(item: item_data, meta: meta_data, dri: dri, schema: schema, did: did)
             else
                 @store = Store.new

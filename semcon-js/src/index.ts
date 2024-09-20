@@ -1,12 +1,15 @@
 import axios, { AxiosResponse } from 'axios';
 import { CheckUserResponse, BackupResponse } from "./models/response";
 import { SemconError } from "./models/error/";
+import { read as OydidRead } from "oydid";
 
 export function getSemcon(
   baseUrl: string,
 ) {
   async function version(): Promise<string> {
     const retVal = await axios.get(`${baseUrl}/version`);
+    const doc = await OydidRead("");
+    console.log(doc.key);
     return retVal.data;
   }
 

@@ -4,6 +4,6 @@ class ApiController < ApplicationController
     end
 
     if !(ENV["AUTH"].to_s == "" || ENV["AUTH"].to_s.downcase == "false")
-        before_action -> { doorkeeper_authorize! :read, :write, :admin }, except: :active
+        before_action -> { doorkeeper_authorize! :read, :write, :admin }, except: [:active, :idaustria]
     end
 end

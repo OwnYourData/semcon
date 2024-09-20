@@ -53,10 +53,9 @@ class CredentialsController < ApplicationController
                 holder: holder)
             success = @cred.save
         else
-            success = @cred.update_attributes(
-                identifier: identifier,
-                vc: vc.to_json,
-                holder: holder)
+            @cred.vc = vc.to_json,
+            @cred.holder = holder
+            success = @cred.save
         end
         if success
             render json: {"identifier": identifier},

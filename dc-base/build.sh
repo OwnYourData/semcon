@@ -17,9 +17,9 @@ while [ $# -gt 0 ]; do
     case "$1" in
         --local*)
             # setopt localoptions rmstarsilent
-            rm -f docker/local-gem/*
-            cp ../ruby-gem/pkg/semcon-`cat ../ruby-gem/VERSION`.gem docker/local-gem
-            cp ../../oydid/ruby-gem/pkg/oydid-`cat ../../oydid/ruby-gem/VERSION`.gem docker/local-gem
+            # rm -f docker/local-gem/*
+            # cp ../ruby-gem/pkg/semcon-`cat ../ruby-gem/VERSION`.gem docker/local-gem
+            # cp ../../oydid/ruby-gem/pkg/oydid-`cat ../../oydid/ruby-gem/VERSION`.gem docker/local-gem
             BUILD_LOCAL=true
             DOCKERFILE="${DOCKERFILE}-local"
             ;;

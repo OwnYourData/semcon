@@ -7,20 +7,20 @@ services:
       RAILS_ENV: "production"
       RAILS_LOG_TO_STDOUT: "TRUE"
       DC_DB: "postgres"
-      DB_HOST: "decdb"
+      DB_HOST: "db"
       DB_NAME: "dc"
     networks:
       - local-net
     ports:
       - "3500:3000"
     depends_on:
-      - "decdb"
+      - "db"
     deploy:
       resources:
         limits:
           memory: 128M
-  decdb:
-    image: arm64v8/postgres:14.4-alpine
+  db:
+    image: arm64v8/postgres:15-alpine
     container_name: decdb
     environment:
       POSTGRES_HOST_AUTH_METHOD: "trust"

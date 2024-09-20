@@ -202,10 +202,26 @@ def sc_token(did, options)
     # check if provided private key matches pubkey in DID document
     did_info, msg = Oydid.read(did, options)
     if did_info.nil?
-        return [nil, "cannot resolve DID (on sc_token)"]
+        if options[:silent].nil? || !options[:silent]
+            if options[:json].nil? || !options[:json]
+                puts "Error: cannot resolve DID (on sc_token)"
+            else
+                puts '{"error": "cannot resolve DID (on sc_token)"}'
+            end
+        end
+        exit 1
+        # return [nil, "cannot resolve DID (on sc_token)"]
     end
     if did_info["error"] != 0
-        return [nil, did_info["message"].to_s]
+        if options[:silent].nil? || !options[:silent]
+            if options[:json].nil? || !options[:json]
+                puts "Error: " + did_info["message"].to_s
+            else
+                puts '{"error": "' + did_info["message"].to_s} + '"}'
+            end
+        end
+        exit 1
+        # return [nil, did_info["message"].to_s]
     end
     if did_info["doc"]["key"].split(":")[0].to_s != Oydid.public_key(privateKey, options).first
         if options[:silent].nil? || !options[:silent]
