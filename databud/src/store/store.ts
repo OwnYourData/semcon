@@ -173,8 +173,7 @@ export const getStore = () => {
       async [ActionType.FETCH_SCHEMA_DRIS]({ commit, dispatch }) {
         await doFetch<VaultSchema[]>(
           commit,
-          // TODO: provide real interface
-          async () => (await soya.query({ name: 'Person' })).map<VaultSchema>(x => ({
+          async () => (await soya.query()).map<VaultSchema>(x => ({
             dri: x.dri,
             title: x.name,
           })),
