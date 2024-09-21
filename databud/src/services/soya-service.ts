@@ -1,5 +1,6 @@
 import { Soya } from "soya-js";
 
-// soya is created only once
+// soya is created centrally
 // this way we can make use of its inbuilt caching
-export const soya = new Soya();
+export let soya = new Soya();
+export const initialize = (instance: Soya) => soya = instance;

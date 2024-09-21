@@ -44,7 +44,7 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { setInstance as setVaultifier, soya } from './services';
+import { setInstance as setVaultifier, initialize as initializeSoya, soya } from './services';
 import Spinner from './components/Spinner.vue'
 import NavBar from './components/NavBar.vue'
 import Login, { Data as LoginData } from './components/Login.vue'
@@ -53,6 +53,7 @@ import { RoutePath } from './router';
 import { RouteParams } from "./router/routes";
 import { IStore } from "./store";
 import { ConfigService } from "./services/config-service";
+import { RepoService, Soya } from "soya-js";
 
 const isLoginData = (data: any): data is LoginData => {
   const d = data as LoginData;
@@ -106,6 +107,13 @@ export default Vue.extend({
 
       // Here we removed quite substantial amount of code from the original data bud
       // as we currently don't have VaultifierWeb configuration for SOyA
+
+      const { searchParams } = new URL(window.location.href);
+      let endpointUrl = searchParams.get('PIA_URL')?.trim();
+      if (!endpointUrl) {
+        endpointUrl = `${window.location.protocol}//${window.location.host}`;
+      }
+      initializeSoya(new Soya({ service: new RepoService(endpointUrl) }));
 
       // TODO: This is a quirky type conversion, but since vaultifier version 3.x supports the new generation of SemCons
       // SOyA and new SemCons are currently not compatible (and thus soya-js still builds upon vaultifier version 2.x)
