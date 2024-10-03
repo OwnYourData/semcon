@@ -173,6 +173,7 @@ export default Vue.extend({
   watch: {
     language() {
       this.$store.dispatch(ActionType.SET_VAULT_ITEM_LANGUAGE, this.language);
+      this.fetchVaultItems();
     },
   },
   methods: {
