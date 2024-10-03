@@ -311,8 +311,12 @@ export default Vue.extend({
           // or if one wants to access item information the template is like: {{$item.id}} or {{$item.updatedAt}}
           $item: vaultItem,
         });
-      else
-        return vaultItem.id;
+      else {
+        // This list title logic is specific to soyabud
+        const meta = vaultItem.raw;
+        const title = meta.schema || vaultItem.id;
+        return title;
+      }
     },
   },
   computed: {
