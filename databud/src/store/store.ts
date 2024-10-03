@@ -227,8 +227,15 @@ export const getStore = () => {
             if (schemaPath) {
               // TODO: needs paging mechanism
               const res = await soya.info(schemaPath);
-              const items = res.history.map<SoyaVaultMeta>(x => {
-                const date = new Date(x.date);
+              const items = res.history
+                .filter(x => {
+                  if (state.vaultItem.language === Language.YAML)
+                    return x.yaml;
+
+                  return true;
+                })
+                .map<SoyaVaultMeta>(x => {
+                  const date = new Date(x.date);
 
                 return {
                   id: x.schema,
