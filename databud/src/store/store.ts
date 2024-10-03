@@ -237,12 +237,12 @@ export const getStore = () => {
                 .map<SoyaVaultMeta>(x => {
                   const date = new Date(x.date);
 
-                return {
-                  id: x.schema,
-                  dri: x.schema,
-                  createdAt: date,
-                  updatedAt: date,
-                  meta: {},
+                  return {
+                    id: x.dri,
+                    dri: x.dri,
+                    createdAt: date,
+                    updatedAt: date,
+                    meta: {},
                   raw: x,
                 };
               });
