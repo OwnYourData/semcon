@@ -15,18 +15,20 @@ export interface IFetchVaultItems {
   fetchContent?: boolean;
 }
 
-// These special SOyA types are important, as for SOyA we always use
-// DRI as identifier, which is always a string
-type SoyaVaultMeta = Omit<VaultMeta, 'id'> & {
-  id: number | string;
+// These special types are currently due to a legacy
+// implementation, but could be helpful in future
+// if we want to extend the base vaultifier types
+type SoyaVaultMeta = VaultMeta & {
+  // id: number | string;
 };
 
-type SoyaVaultMinMeta = Omit<VaultMinMeta, 'id'> & {
-  id: number | string;
+type SoyaVaultMinMeta = VaultMinMeta & {
+  // id: number | string;
+  dri: string;
 };
 
-type SoyaVaultItem = Omit<VaultItem, 'id'> & {
-  id: number | string;
+type SoyaVaultItem = VaultItem & {
+  // id: number | string;
 };
 
 export enum Language {
@@ -164,6 +166,7 @@ export const getStore = () => {
 
         await soya.push(jsonld, {
           soya_yaml: yaml,
+          meta: payload.meta,
         });
       },
       async [ActionType.DELETE_VAULT_ITEM]({ state, commit, dispatch }, payload: VaultMeta) {
@@ -238,14 +241,14 @@ export const getStore = () => {
                   const date = new Date(x.date);
 
                   return {
-                    id: x.dri,
+                    id: x.id,
                     dri: x.dri,
                     createdAt: date,
                     updatedAt: date,
                     meta: {},
-                  raw: x,
-                };
-              });
+                    raw: x,
+                  };
+                });
 
               return {
                 items,
@@ -272,18 +275,17 @@ export const getStore = () => {
         await doFetch<SoyaVaultItem>(
           commit,
           async () => {
-            const res = await soya.pull(payload.id as string, {
-              pullType: state.vaultItem.language === Language.YAML ? 'yaml' : 'json-ld',
-            });
+            const res = await soya.service.get(`/api/data?id=${payload.id}`, true);
+
             return {
               id: payload.id,
-              dri: payload.id.toString(),
-              createdAt: new Date(),
-              updatedAt: new Date(),
+              dri: payload.dri,
+              createdAt: res.created_at,
+              updatedAt: res.updated_at,
               isEncrypted: false,
-              meta: {},
+              meta: res.meta,
               raw: res,
-              data: res,
+              data: state.vaultItem.language === Language.YAML ? res.soya_yaml : res.data,
             };
           },
           (commit, data) => commit(MutationType.SET_VAULT_ITEM, data),
