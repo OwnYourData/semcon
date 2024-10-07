@@ -50,7 +50,7 @@
           >
             <spinner v-if="isSaving" />
             <template v-else>
-              Save
+              Push
             </template>
           </custom-button>
         </inline-group>
