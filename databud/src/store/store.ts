@@ -177,7 +177,9 @@ export const getStore = () => {
         await doFetch<VaultSchema[]>(
           commit,
           async () => (await soya.query()).map<VaultSchema>(x => ({
-            dri: x.dri,
+            // yep, this is correct
+            // the name is our unique identifier
+            dri: x.name,
             title: x.name,
           })),
           (commit, data) => {
