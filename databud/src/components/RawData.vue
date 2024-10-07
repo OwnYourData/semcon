@@ -52,7 +52,7 @@
       <vue-monaco-editor
         v-if="isDataEditable"
         class="monaco"
-        :language="language"
+        :language="monacoLanguage"
         v-model="editableData"
       />
       <raw-json
@@ -155,6 +155,12 @@ export default Vue.extend({
     },
     isEncrypted(): boolean {
       return this.item.isEncrypted;
+    monacoLanguage(): string {
+      switch (this.language) {
+        case Language.JSON_LD: return 'json';
+        case Language.YAML: return 'yaml';
+        default: return '';
+      }
     }
   }
 });
