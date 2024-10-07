@@ -14,6 +14,7 @@
           :language="language"
           :isSaving="isSaving"
           @save="saveVaultItem"
+          @cancel="cancel"
         ></raw-data>
       </b-tab>
       <b-tab
@@ -60,7 +61,7 @@ import RawData from './RawData.vue';
 import FormEditView from './FormEditView.vue';
 
 import { ActionType } from '@/store/action-type';
-import { IStore } from '../store';
+import { IStore, MutationType } from '../store';
 
 interface Data {
   isSaving: boolean;
@@ -69,7 +70,7 @@ interface Data {
 
 export default Vue.extend({
   props: {
-    item: Object as PropType<VaultItem>,
+    item: Object as PropType<VaultItem | undefined>,
     showRawView: {
       default: true,
       type: Boolean as PropType<boolean>,
@@ -85,7 +86,7 @@ export default Vue.extend({
   },
   computed: {
     schemaDri(): string | undefined {
-      return this.item.meta.schema;
+      return this.item?.meta.schema;
     },
     hasSchema(): boolean {
       return !!this.schemaDri;
@@ -109,6 +110,9 @@ export default Vue.extend({
       if (onComplete)
         // indicate saving is complete
         onComplete();
+    },
+    cancel() {
+      this.$emit('cancel');
     },
   },
 })

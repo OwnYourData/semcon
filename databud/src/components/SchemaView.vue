@@ -84,7 +84,8 @@
         </b-tab>
       </b-tabs>
     </section>
-    <b-container v-if="showEditView">
+    <!-- soyabud: we don't show any SOyA forms here -->
+    <!-- <b-container v-if="showEditView">
       <b-alert
         v-if="saveMessage"
         show
@@ -99,7 +100,7 @@
         @save="saveVaultItem"
         @cancel="() => _showEditView(false)"
       ></form-edit-view>
-    </b-container>
+    </b-container> -->
   </div>
 </template>
 
@@ -109,7 +110,8 @@ import { IFetchVaultItems, IStore, Language } from '../store';
 import List, { RefreshObj } from '../components/List.vue';
 import CustomButton from '../components/Button.vue';
 import ChartVisualizer from '../components/ChartVisualizer.vue';
-import FormEditView from './FormEditView.vue';
+// soyabud: unused here
+// import FormEditView from './FormEditView.vue';
 import { VaultItem, VaultMinMeta, VaultPostItem, VaultSchema } from 'vaultifier/dist/module';
 import { ActionType } from '@/store/action-type';
 import { FetchState } from '@/store/fetch-state';
@@ -166,7 +168,8 @@ export default Vue.extend({
   }),
   components: {
     CustomButton,
-    FormEditView,
+    // soyabud: unused here
+    // FormEditView,
     List,
     ChartVisualizer,
   },

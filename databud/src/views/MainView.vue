@@ -28,9 +28,9 @@
     </div>
     <data-visualizer
       class="data-visualizer"
-      v-if="hasSelectedVaultItem"
+      v-if="hasSelectedVaultItem || showEditView"
       :item="selectedVaultItem"
-      @selectVaultItem="selectVaultItem"
+      @cancel="cancel"
     ></data-visualizer>
   </b-container>
 </template>
@@ -50,6 +50,7 @@ import { ActionType } from '@/store/action-type';
 
 interface Data {
   hasRepoSupport: boolean,
+  showEditView: boolean,
 }
 
 export default Vue.extend({
@@ -61,6 +62,7 @@ export default Vue.extend({
   },
   data: (): Data => ({
     hasRepoSupport: false,
+    showEditView: false,
   }),
   async created() {
     this.hasRepoSupport = (await getInstance().getVaultSupport()).repos;
@@ -86,13 +88,19 @@ export default Vue.extend({
     handleShowEditView(isShown: boolean) {
       if (isShown)
         this.$store.commit(MutationType.SET_VAULT_ITEM, undefined);
+
+      this.showEditView = isShown;
     },
     handleActivateTab() {
       this.$store.dispatch(ActionType.RESET_VAULT_ITEMS);
     },
     selectVaultItem(item: VaultMinMeta) {
       this.$store.dispatch(ActionType.FETCH_VAULT_ITEM, item);
-    }
+    },
+    cancel() {
+      this.$store.commit(MutationType.SET_VAULT_ITEM, undefined);
+      this.handleShowEditView(false);
+    },
   }
 })
 </script>

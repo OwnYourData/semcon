@@ -34,19 +34,26 @@
           class="check"
           v-model="isDataEditable"
         >Editable</b-checkbox>
-        <custom-button
-          class="btn-save"
-          @click="save"
-          :type="isSaving ? 'primary-outline' : undefined"
-          v-if="isDataEditable || isMetaEditable"
-          :disabled="isSaving"
-        >
-          <spinner v-if="isSaving" />
-          <template v-else>
-            Save
-          </template>
-        </custom-button>
-
+        <inline-group class="top-bar">
+          <custom-button
+            @click="cancel"
+            type="danger"
+            :disabled="isSaving"
+          >
+            Cancel
+          </custom-button>
+          <custom-button
+            @click="save"
+            :type="isSaving ? 'primary-outline' : undefined"
+            v-if="isDataEditable || isMetaEditable"
+            :disabled="isSaving"
+          >
+            <spinner v-if="isSaving" />
+            <template v-else>
+              Save
+            </template>
+          </custom-button>
+        </inline-group>
       </div>
 
       <vue-monaco-editor
@@ -69,6 +76,7 @@ import { VaultItem, VaultPostItem } from 'vaultifier';
 import Vue, { PropType } from 'vue'
 import RawJson from './RawJson.vue';
 import CustomButton from './Button.vue';
+import InlineGroup from './InlineGroup.vue';
 import Spinner from './Spinner.vue';
 import { Language } from '../store';
 
@@ -84,10 +92,15 @@ export default Vue.extend({
     RawJson,
     CustomButton,
     Spinner,
+    InlineGroup,
   },
   props: {
     item: {
       type: Object as PropType<VaultItem>,
+      default: () => ({
+        data: undefined,
+        meta: {},
+      } as VaultPostItem),
     },
     isSaving: {
       type: Boolean as PropType<boolean>,
@@ -123,6 +136,9 @@ export default Vue.extend({
 
       this.$emit('save', postItem);
     },
+    cancel() {
+      this.$emit('cancel');
+    },
   },
   watch: {
     editableData(value: string) {
@@ -154,7 +170,8 @@ export default Vue.extend({
       return copy;
     },
     isEncrypted(): boolean {
-      return this.item.isEncrypted;
+      return (this.item as VaultItem).isEncrypted;
+    },
     monacoLanguage(): string {
       switch (this.language) {
         case Language.JSON_LD: return 'json';
@@ -177,7 +194,7 @@ export default Vue.extend({
   margin-left: 1em;
 }
 
-.btn-save {
+.top-bar {
   margin-left: auto;
 }
 
