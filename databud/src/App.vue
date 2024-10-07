@@ -119,6 +119,7 @@ export default Vue.extend({
       // SOyA and new SemCons are currently not compatible (and thus soya-js still builds upon vaultifier version 2.x)
       // However, for the use in this project the differences should not be noticable, thus the conversion is okayish
       let vaultifier: Vaultifier = await soya.service.getVaultifier() as unknown as Vaultifier;
+      setVaultifier(vaultifier);
 
       if (!vaultifier) {
         this.message = `Sorry. I was not able to create a vaultifier instance.
