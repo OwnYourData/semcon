@@ -8,7 +8,7 @@
         lazy
         @activate-tab="handleActivateTab"
       >
-        <b-tab title="Schemas">
+        <b-tab title="All Structures">
           <schema-view @showEditView="handleShowEditView"></schema-view>
         </b-tab>
         <b-tab

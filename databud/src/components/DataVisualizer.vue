@@ -6,7 +6,7 @@
       v-model="activeTabIndex"
     >
       <b-tab
-        title="Raw Data"
+        title="SOyA Structure"
         v-if="showRawView"
       >
         <raw-data
