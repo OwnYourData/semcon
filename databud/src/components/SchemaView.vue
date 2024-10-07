@@ -321,7 +321,8 @@ export default Vue.extend({
   },
   computed: {
     schemaDRIs(): (VaultSchema & { dri?: string })[] {
-      return [{ dri: undefined, title: 'Default' }, ...this.$store.state.schemaDRI.all];
+      // soyabud: do not include "default" item as it does not make any sense here
+      return [...this.$store.state.schemaDRI.all];
     },
     isSchemaListLoading(): boolean {
       return (this.$store.state as IStore).schemaDRI.state === FetchState.FETCHING;
