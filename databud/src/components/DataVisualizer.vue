@@ -22,14 +22,14 @@
         v-if="hasSchema"
         lazy
       >
-        <form-edit-view
+        <form-view
           :item="item"
           :schemaDri="schemaDri"
           :allowSelectSchema="true"
           :hasCancel="false"
           :isSaving="isSaving"
           @save="saveVaultItem"
-        ></form-edit-view>
+        ></form-view>
       </b-tab>
     </b-tabs>
   </b-card>
@@ -58,7 +58,7 @@ import Vue, { PropType } from 'vue';
 import { VaultItem, VaultMinMeta, VaultPostItem } from 'vaultifier';
 import RawData from './RawData.vue';
 
-import FormEditView from './FormEditView.vue';
+import FormView from './FormView.vue';
 
 import { ActionType } from '@/store/action-type';
 import { IStore, MutationType } from '../store';
@@ -82,11 +82,11 @@ export default Vue.extend({
   }),
   components: {
     RawData,
-    FormEditView,
+    FormView,
   },
   computed: {
     schemaDri(): string | undefined {
-      return this.item?.meta.schema;
+      return this.item?.dri;
     },
     hasSchema(): boolean {
       return !!this.schemaDri;

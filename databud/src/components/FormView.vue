@@ -94,6 +94,8 @@ export default Vue.extend({
           break;
       }
     });
+
+    this.reload();
   },
   methods: {
     async reload() {
