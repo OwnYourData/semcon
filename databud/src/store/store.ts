@@ -206,24 +206,25 @@ export const getStore = () => {
         commit(MutationType.SET_VAULT_ITEM, undefined);
         commit(MutationType.SET_CURRENT_SCHEMA, undefined);
 
-        if (schema?.dri) {
-          try {
-            const doc = await soya.pull(schema.dri);
-            commit(MutationType.SET_CURRENT_SCHEMA, doc);
+        // soyabud: querying for databud renderings is not really meaningful, therefore disabled
+        // if (schema?.dri) {
+        //   try {
+        //     const doc = await soya.pull(schema.dri);
+        //     commit(MutationType.SET_CURRENT_SCHEMA, doc);
 
-            const sparql = await soya.getSparqlBuilder(doc);
-            const bindings = await sparql.query(`
-            PREFIX base: <${doc["@context"]["@base"]}>
-            SELECT * WHERE {
-                ?base a base:OverlayDataBudRendering .
-            }`);
+        //     const sparql = await soya.getSparqlBuilder(doc);
+        //     const bindings = await sparql.query(`
+        //     PREFIX base: <${doc["@context"]["@base"]}>
+        //     SELECT * WHERE {
+        //         ?base a base:OverlayDataBudRendering .
+        //     }`);
 
-            // if there is an overlay for DataBudRendering
-            // we want to fetch the whole content
-            if (bindings.length > 0)
-              fetchContent = true;
-          } catch { /* if it goes wrong we don't care */ }
-        }
+        //     // if there is an overlay for DataBudRendering
+        //     // we want to fetch the whole content
+        //     if (bindings.length > 0)
+        //       fetchContent = true;
+        //   } catch { /* if it goes wrong we don't care */ }
+        // }
 
         await doFetch<MultiResponse<SoyaVaultMeta>>(
           commit,

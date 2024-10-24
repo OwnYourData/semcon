@@ -192,22 +192,23 @@ export default Vue.extend({
 
       await this.fetchVaultItems();
 
-      const doc = state.schemaDRI.current;
-      if (doc) {
-        try {
-          const sparql = await soya.getSparqlBuilder(doc);
-          const bindings = await sparql.query(`
-  PREFIX base: <${doc["@context"]["@base"]}>
-  PREFIX soya: <https://w3id.org/soya/ns#>
-  SELECT * WHERE {
-      ?base a base:OverlayDataBudRendering .
-      ?base soya:renderingLabel ?label .
-  }`);
+      // soyabud: querying for databud renderings is not really meaningful, therefore disabled
+      //     const doc = state.schemaDRI.current;
+      //     if (doc) {
+      //       try {
+      //         const sparql = await soya.getSparqlBuilder(doc);
+      //         const bindings = await sparql.query(`
+      // PREFIX base: <${doc["@context"]["@base"]}>
+      // PREFIX soya: <https://w3id.org/soya/ns#>
+      // SELECT * WHERE {
+      //     ?base a base:OverlayDataBudRendering .
+      //     ?base soya:renderingLabel ?label .
+      // }`);
 
-          if (bindings[0])
-            this.selectedListLabelTemplate = bindings[0].get('?label') || undefined;
-        } catch { /* we don't care if this does not work */ }
-      }
+      //         if (bindings[0])
+      //           this.selectedListLabelTemplate = bindings[0].get('?label') || undefined;
+      //       } catch { /* we don't care if this does not work */ }
+      //     }
     },
     async selectVaultItem(item?: VaultMinMeta) {
       await this.$store.dispatch(ActionType.FETCH_VAULT_ITEM, item);
