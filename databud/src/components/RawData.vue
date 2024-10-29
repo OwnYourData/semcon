@@ -35,6 +35,20 @@
           v-model="isDataEditable"
         >Editable</b-checkbox>
         <inline-group class="top-bar">
+          <b-dropdown
+            v-if="isDataEditable"
+            :disabled="!isYaml"
+            text="Templates"
+          >
+            <b-dropdown-item
+              v-for="template of Object.keys(templates)"
+              :key="template"
+              @click="selectTemplate(template)"
+            >
+              {{template}}
+            </b-dropdown-item>
+          </b-dropdown>
+
           <custom-button
             @click="cancel"
             type="danger"
@@ -79,12 +93,14 @@ import CustomButton from './Button.vue';
 import InlineGroup from './InlineGroup.vue';
 import Spinner from './Spinner.vue';
 import { Language } from '../store';
+import { all as templates } from '../res/templates';
 
 interface Data {
   isDataEditable: boolean;
   isMetaEditable: boolean;
   editableData: string;
   editableMeta: string;
+  templates: { [name: string]: string };
 }
 
 export default Vue.extend({
@@ -114,6 +130,7 @@ export default Vue.extend({
     isMetaEditable: false,
     editableData: '',
     editableMeta: '',
+    templates,
   }),
   created() {
     this.resetEditableData();
@@ -139,6 +156,13 @@ export default Vue.extend({
     cancel() {
       this.$emit('cancel');
     },
+    selectTemplate(template: string) {
+      const t = this.templates[template];
+      if (!t)
+        return;
+
+      this.editableData = t + '\n' + this.editableData;
+    }
   },
   watch: {
     editableData(value: string) {
@@ -178,6 +202,9 @@ export default Vue.extend({
         case Language.YAML: return 'yaml';
         default: return '';
       }
+    },
+    isYaml() {
+      return this.language === Language.YAML;
     }
   }
 });
