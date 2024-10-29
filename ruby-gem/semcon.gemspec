@@ -26,7 +26,7 @@ Gem::Specification.new do |gem|
     gem.required_ruby_version = '>= 2.6.9'
     gem.requirements          = []
     gem.add_dependency 'httparty',              '~> 0.21'
-    gem.add_dependency 'oydid',                 '~> 0.5.4'
+    gem.add_dependency 'oydid',                 '~> 0.5.6'
 
     gem.add_development_dependency 'rspec',     '~> 3.10'
 

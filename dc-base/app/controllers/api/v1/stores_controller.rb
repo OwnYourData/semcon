@@ -31,7 +31,7 @@ module Api
                 if !did_document.nil?
                     # DID
                     item_data = input["data"] rescue nil
-                    meta_data = input["meta"] #.except(:schema, "schema") rescue nil
+                    meta_data = input["meta"].except(:schema, "schema") rescue nil
                     schema = input["meta"]["schema"] rescue nil
                 else
                     if input.is_a?(Array) || input["data"].nil?
@@ -40,7 +40,7 @@ module Api
                             item_data = input
                         else
                             item_data = input.except(:meta, "meta", :schema, "schema")
-                            meta_data = input["meta"] #.except(:schema, "schema") rescue nil
+                            meta_data = input["meta"].except(:schema, "schema") rescue nil
                             schema = input["meta"]["schema"] rescue nil
                         end
                     else
@@ -52,12 +52,12 @@ module Api
                             else
                                 item_data = input["data"].except(:meta, "meta", :schema, "schema")
                             end
-                            meta_data = input["meta"] #.except(:schema, "schema") rescue nil
+                            meta_data = input["meta"].except(:schema, "schema") rescue nil
                             schema = input["meta"]["schema"] rescue nil
                         else
                             # Legacy Structured data
                             item_data = input["data"]["content"]
-                            meta_data = input["data"]["meta"] #.except(:schema, "schema") rescue nil
+                            meta_data = input["data"]["meta"].except(:schema, "schema") rescue nil
                             schema = input["data"]["meta"]["schema"] rescue nil
                         end
                     end
@@ -67,7 +67,7 @@ module Api
                     item_data.each do |i|
                         if meta_data.nil?
                             i_data = i.except(:meta, "meta", :schema, "schema")
-                            m_data = i["meta"] #.except(:schema, "schema") rescue nil
+                            m_data = i["meta"].except(:schema, "schema") rescue nil
                             schema = i["meta"]["schema"] rescue nil
                             i_retVal = write_item(i_data, m_data, schema, nil, nil)
                         else
@@ -117,7 +117,7 @@ module Api
                     if query_params.except(:page, :items, :f, "f") == {}
                         @pagy, @store = pagy(Store.all.order(id: :asc), page: page, items: items)
                     else
-                        if Rails.configuration.database_configuration[Rails.env]["adapter"] == "postgresql"
+                        if HAS_JSONB
                             # query_params: https://www.cstutorial.org/ruby-on-rails/how-to-query-postgresqls-json-fields-from-rails
                             if ["data", "data-not", "meta", "meta-not"].any? {|k| query_params.key?(k)}
                                 query_string = ""
@@ -193,9 +193,9 @@ module Api
                         when "plain"
                             retVal = @store.select(:item)
                         when "meta"
-                            retVal = @store.select(:meta,:id,:dri,:schema)
+                            retVal = @store.select(:meta, :id, :dri, :schema, :created_at, :updated_at)
                         else
-                            retVal = @store.select(:item,:meta,:id,:dri,:schema)
+                            retVal = @store.select(:item, :meta, :id, :dri, :schema, :created_at, :updated_at)
                         end
                     else
                         if @store.class.to_s == "Store::ActiveRecord_Relation"
@@ -205,9 +205,9 @@ module Api
                         when "plain"
                             retVal = @store.item
                         when "meta"
-                            retVal = {meta: @store.meta, id: @store.id, dri: @store.dri, schema: @store.schema}
+                            retVal = {meta: @store.meta, id: @store.id, dri: @store.dri, schema: @store.schema, created_at: @store.created_at, updated_at: @store.updated_at}
                         else
-                            retVal = {item: @store.item, meta: @store.meta, id: @store.id, dri: @store.dri, schema: @store.schema}
+                            retVal = {item: @store.item, meta: @store.meta, id: @store.id, dri: @store.dri, schema: @store.schema, created_at: @store.created_at, updated_at: @store.updated_at}
                         end
                     end
 
@@ -217,7 +217,7 @@ module Api
                         response_object = {}
                         case params[:f]
                         when "plain"
-                            if retVal["item"].nil?
+                            if retVal.is_a?(Array) || retVal["item"].nil?
                                 if retVal.is_a?(String)
                                     response_object = JSON.parse(retVal)
                                 else
@@ -249,7 +249,7 @@ module Api
                             end
                             if retVal["meta"].nil? || retVal["meta"] == {}
                                 if !retVal["schema"].nil?
-                                    retVal["meta"]={"schema": retVal["schema"]}
+                                    response_object["meta"] = {"schema": retVal["schema"]}
                                 end
                             else
                                 if retVal["meta"].is_a?(String)
@@ -261,6 +261,15 @@ module Api
                                     response_object["meta"]["schema"] = retVal["schema"]
                                 end
                             end
+                            if response_object["meta"].nil?
+                                response_object["meta"] = {}
+                            end
+                            # response_object["meta"]["created_at"] = retVal["created_at"]
+                            # response_object["meta"]["updated_at"] = retVal["updated_at"]
+                            response_object["created_at"] = retVal["created_at"]
+                            response_object["updated_at"] = retVal["updated_at"]
+                            # response_object["meta"]["id"] = retVal["id"]
+                            # response_object["meta"]["dri"] = retVal["dri"]
                             response_object["id"] = retVal["id"]
                             response_object["dri"] = retVal["dri"]
                         end
@@ -295,7 +304,7 @@ module Api
                                 end
                                 if retVal["meta"].nil?
                                     if !retVal["schema"].nil?
-                                        retVal["meta"]={"schema": retVal["schema"]}
+                                        response_object["meta"] = {"schema": retVal["schema"]}
                                     end
                                 else
                                     if retVal["meta"].is_a?(String)
@@ -307,6 +316,15 @@ module Api
                                         response_object["meta"]["schema"] = retVal["schema"]
                                     end
                                 end
+                                if response_object["meta"].nil?
+                                    response_object["meta"] = {}
+                                end
+                                # response_object["meta"]["created_at"] = i.created_at
+                                # response_object["meta"]["updated_at"] = i.updated_at
+                                response_object["created_at"] = i.created_at
+                                response_object["updated_at"] = i.updated_at
+                                # response_object["meta"]["id"] = retVal["id"]
+                                # response_object["meta"]["dri"] = retVal["dri"]
                                 response_object["id"] = retVal["id"]
                                 response_object["dri"] = retVal["dri"]
                             end
@@ -328,7 +346,7 @@ module Api
             end
 
             def update
-                input = params.permit!["data"].to_hash rescue nil
+                input = params.permit!["data", "meta"].to_hash rescue nil
                 if input.nil?
                     input = params.permit!.except(:format, "format", :controller, "controller", :action, "action", :store, "store", :id, "id", :dri, "dri").to_hash rescue nil
                 end
@@ -353,7 +371,6 @@ module Api
                            status: 404
                     return
                 end
-
                 id = @store.id
                 meta_data = nil
                 schema = nil
@@ -363,7 +380,7 @@ module Api
                         item_data = input
                     else
                         item_data = input.except(:meta, "meta", :schema, "schema")
-                        meta_data = input["meta"] #.except(:schema, "schema") rescue nil
+                        meta_data = input["meta"].except(:created_at, "created_at", :updated_at, "updated_at") #.except(:schema, "schema") rescue nil
                         schema = input["meta"]["schema"] rescue nil
                     end
                 else
@@ -375,12 +392,12 @@ module Api
                         else
                             item_data = input["data"].except(:meta, "meta", :schema, "schema")
                         end
-                        meta_data = input["meta"] #.except(:schema, "schema") rescue nil
+                        meta_data = input["meta"].except(:created_at, "created_at", :updated_at, "updated_at") #.except(:schema, "schema") rescue nil
                         schema = input["meta"]["schema"] rescue nil
                     else
                         # Legacy Structured data
                         item_data = input["data"]["content"]
-                        meta_data = input["data"]["meta"] #.except(:schema, "schema") rescue nil
+                        meta_data = input["data"]["meta"].except(:created_at, "created_at", :updated_at, "updated_at") #.except(:schema, "schema") rescue nil
                         schema = input["data"]["meta"]["schema"] rescue nil
                     end
                 end
@@ -391,9 +408,8 @@ module Api
                 end
 
                 @new_store = Store.find_by_dri(new_dri)
-
                 if @new_store.nil?
-                    if Rails.configuration.database_configuration[Rails.env]["adapter"] == "postgresql"
+                    if HAS_JSONB
                         @store.item = item_data
                         @store.meta = meta_data
                     else
@@ -411,7 +427,7 @@ module Api
                     render json: retVal,
                            status: 200
                 else
-                    if Rails.configuration.database_configuration[Rails.env]["adapter"] == "postgresql"
+                    if HAS_JSONB
                         @new_store.item = item_data
                         @new_store.meta = meta_data
                     else

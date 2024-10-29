@@ -617,9 +617,25 @@ class DidsController < ApplicationController
         end
         public_key = params[:public_key].to_s
         if public_key == ""
-            render json: {"error": "missing public_key"},
-                   status: 401
-            return
+            did = params[:did].to_s
+            if did != ""
+                did_info, msg = Oydid.read(did, {})
+                if did_info.nil?
+                    render json: {"error": "cannot resolve DID"},
+                           status: 401
+                    return
+                end
+                if did_info["error"] != 0
+                    render json: {"error": did_info["message"].to_s},
+                           status: 401
+                    return
+                end
+                public_key = did_info["doc"]["key"].split(":")[0].to_s
+            else
+                render json: {"error": "missing public_key"},
+                       status: 401
+                return
+            end
         end
 
         challenge = SecureRandom.alphanumeric(32)
@@ -632,7 +648,7 @@ class DidsController < ApplicationController
         end
         DidSession.new(
             session: params[:session_id].to_s,
-            public_key: params[:public_key].to_s,
+            public_key: public_key,
             challenge: challenge,
             oauth_application_id: @oauth_app.id).save
         render json: {"challenge": challenge}, 

@@ -1,2 +1,11 @@
-Gemfile.lock
+kubernetes/
+pytest/
+test/
 tmp/
+Gemfile.lock
+.dockerignore
+.gitattributes
+.gitignore
+build.sh
+README.md
+.DS_Store

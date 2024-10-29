@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_02_10_002656) do
+ActiveRecord::Schema[7.1].define(version: 2024_08_14_224309) do
   create_table "credentials", force: :cascade do |t|
     t.string "identifier"
     t.text "vc"
@@ -37,6 +37,12 @@ ActiveRecord::Schema[7.0].define(version: 2023_02_10_002656) do
     t.string "public_key"
     t.index ["did"], name: "index_dids_on_did", unique: true
     t.index ["public_key"], name: "index_dids_on_public_key"
+  end
+
+  create_table "idaustria_uuids", force: :cascade do |t|
+    t.string "uuid"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "logs", force: :cascade do |t|
@@ -90,6 +96,8 @@ ActiveRecord::Schema[7.0].define(version: 2023_02_10_002656) do
     t.boolean "confidential", default: true, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "bpk"
+    t.boolean "temp", default: false
     t.index ["uid"], name: "index_oauth_applications_on_uid", unique: true
   end
 
