@@ -9,8 +9,6 @@ module.exports = {
       .loader('raw-loader')
       .end();
 
-    console.log(config.module.rules);
-
     return config;
   },
   pluginOptions: {
