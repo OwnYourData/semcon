@@ -9,6 +9,13 @@
         title="Raw Data"
         v-if="showRawView"
       >
+        <b-alert
+          v-if="saveMessage"
+          show
+          variant="danger"
+        >
+          {{saveMessage}}
+        </b-alert>
         <raw-data
           :item="item"
           :isSaving="isSaving"
@@ -63,6 +70,7 @@ import { ActionType } from '@/store/action-type';
 interface Data {
   isSaving: boolean;
   activeTabIndex: number;
+  saveMessage?: string;
 }
 
 export default Vue.extend({
@@ -76,6 +84,7 @@ export default Vue.extend({
   data: (): Data => ({
     isSaving: false,
     activeTabIndex: 0,
+    saveMessage: undefined,
   }),
   components: {
     RawData,
@@ -91,12 +100,14 @@ export default Vue.extend({
   },
   methods: {
     async saveVaultItem(item: VaultPostItem, onComplete?: () => void) {
+      this.saveMessage = undefined;
       this.isSaving = true;
 
       try {
         await this.$store.dispatch(ActionType.UPDATE_VAULT_ITEM, item);
-      } catch {
-        /* TODO: Error handling */
+      } catch (e: any) {
+        console.error(e);
+        this.saveMessage = e.message ?? 'Could not save item';
       }
 
       this.isSaving = false;
