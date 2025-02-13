@@ -301,9 +301,9 @@ export default Vue.extend({
   computed: {
     schemaDRIs(): (VaultSchema & { dri?: string })[] {
       let items = [{ dri: undefined, title: 'Default' }, ...this.$store.state.schemaDRI.all];
-      const search = this.searchText.trim();
+      const search = this.searchText.trim().toLowerCase();
       if (search)
-        items = items.filter(x => x.title.indexOf(search) !== -1);
+        items = items.filter(x => x.title.toLowerCase().indexOf(search) !== -1);
 
       return items;
     },
