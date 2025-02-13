@@ -5,6 +5,12 @@
         :isLoading="isSchemaListLoading"
         @refresh="fetchSchemas"
       >
+        <template v-slot:header-end>
+          <b-input
+            placeholder="Search ..."
+            v-model="searchText"
+          />
+        </template>
         <b-list-group-item
           v-for="item of schemaDRIs"
           :key="item.dri"
@@ -129,6 +135,7 @@ interface IData {
   isSaving: boolean,
   isExecutingAction: boolean,
   saveMessage?: string,
+  searchText: string,
 
   // charting
   selectedTabIndex: number,
@@ -153,6 +160,7 @@ export default Vue.extend({
     isSaving: false,
     isExecutingAction: false,
     saveMessage: undefined,
+    searchText: '',
 
     // charting
     selectedTabIndex: 0,
@@ -215,6 +223,7 @@ export default Vue.extend({
     },
     async fetchSchemas() {
       this.selectedSchema = undefined;
+      this.searchText = '';
       await this.$store.dispatch(ActionType.FETCH_SCHEMA_DRIS);
     },
     async fetchVaultItems(refreshObj?: RefreshObj) {
@@ -326,7 +335,12 @@ export default Vue.extend({
   computed: {
     schemaDRIs(): (VaultSchema & { dri?: string })[] {
       // soyabud: do not include "default" item as it does not make any sense here
-      return [...this.$store.state.schemaDRI.all];
+      let items = [...this.$store.state.schemaDRI.all];
+      const search = this.searchText.trim();
+      if (search)
+        items = items.filter(x => x.title.indexOf(search) !== -1);
+
+      return items;
     },
     isSchemaListLoading(): boolean {
       return (this.$store.state as IStore).schemaDRI.state === FetchState.FETCHING;
