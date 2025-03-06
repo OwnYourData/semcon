@@ -87,6 +87,8 @@ const defaultOptions: VaultifierWebOptions = {
   stateParamName: 'state',
 };
 
+const AUTH_COOKIE_NAME = 'Authorization';
+
 export class VaultifierWeb {
   private static _getParamAccessor = () => {
     const params = new URL(window.location.href).searchParams;
@@ -141,6 +143,17 @@ export class VaultifierWeb {
         repo,
       },
     );
+
+    vaultifier.addAuthenticationRefreshCallback((token) => {
+      if (!token)
+        VaultifierWeb.removeAuthCookie();
+      else
+        // setting the cookie for current hostname is a strong assumption
+        // however, security in browsers anyway don't let us set cookies for other domains
+        // this means, the cookie mechanism for authentication only works for VaultifierWeb
+        // used on the same domain as their backend (semcon)
+        document.cookie = `${AUTH_COOKIE_NAME}=${token};Domain=${window.location.hostname};SameSite=strict`;
+    });
 
     try {
       await vaultifier.getVaultSupport();
@@ -283,7 +296,17 @@ export class VaultifierWeb {
     return vaultifier;
   }
 
+  static removeAuthCookie = () => {
+    // removing the cookie from current hostname is a strong assumption
+    // however, security in browsers anyway don't let us set cookies for other domains
+    // this means, the cookie mechanism for authentication only works for VaultifierWeb
+    // used on the same domain as their backend (semcon)
+    document.cookie = `${AUTH_COOKIE_NAME}=remove;expires=${new Date(0).toUTCString()};Domain=${window.location.hostname};SameSite=strict`;
+  }
+
   static clearAuthentication = async () => {
+    VaultifierWeb.removeAuthCookie();
+
     Storage.remove(StorageKey.PKCE_SECRET);
     Storage.remove(StorageKey.OAUTH_REDIRECT_URL);
     Storage.remove(StorageKey.APPLICATION_ID);
