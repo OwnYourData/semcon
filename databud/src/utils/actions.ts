@@ -4,10 +4,17 @@ import { NetworkResponse } from "vaultifier/dist/module/communicator";
 import Vue from "vue";
 
 export enum ActionMethod {
+  // triggers an internal event
   INTERNAL = 'INTERNAL',
+  // opens a new tab
   OPEN = 'OPEN',
+  // opens a URL in the same tab
+  HREF = 'HREF',
+  // issues a HTTP POST request
   POST = 'POST',
+  // issues a HTTP PUT request
   PUT = 'PUT',
+  // issues a HTTP GET request
   GET = 'GET',
 }
 
@@ -34,6 +41,9 @@ export const executeAction = async (action: Action, vaultifier: Vaultifier, vue?
   // method `OPEN` just opens a new tab
   if (method === ActionMethod.OPEN) {
     window.open(url, '_blank');
+  }
+  else if (method === ActionMethod.HREF) {
+    window.location.href = url;
   }
   else
     try {

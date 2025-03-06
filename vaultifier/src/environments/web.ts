@@ -152,7 +152,7 @@ export class VaultifierWeb {
         // however, security in browsers anyway don't let us set cookies for other domains
         // this means, the cookie mechanism for authentication only works for VaultifierWeb
         // used on the same domain as their backend (semcon)
-        document.cookie = `${AUTH_COOKIE_NAME}=${token};Domain=${window.location.hostname};SameSite=strict`;
+        document.cookie = `${AUTH_COOKIE_NAME}=Bearer ${token};Domain=${window.location.hostname};SameSite=strict`;
     });
 
     try {
