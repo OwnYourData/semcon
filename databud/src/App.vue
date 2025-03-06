@@ -232,7 +232,7 @@ Try looking into the browser console to gain more insights on the problem.`;
         if (this.vaultSupport.user) {
           actions.push({
             key: 'user-profile',
-            method: ActionMethod.OPEN,
+            method: ActionMethod.HREF,
             title: this.vaultSupport.user.fullName,
             url: '/soya/user',
             usesAuth: true,
@@ -248,7 +248,7 @@ Try looking into the browser console to gain more insights on the problem.`;
 
           actions.push({
             key: 'user-register',
-            method: ActionMethod.OPEN,
+            method: ActionMethod.HREF,
             title: 'Register',
             url: '/soya/register',
             usesAuth: false,
