@@ -146,7 +146,7 @@ export class Vaultifier {
     if (this.info)
       return this.info;
 
-    const { data } = await this.communicator.get(this.urls.info, true);
+    const { data } = await this.communicator.get(this.urls.info, 'optional');
 
     return this.info = data;
   }
