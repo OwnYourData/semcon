@@ -150,14 +150,16 @@ export default Vue.extend({
         setVaultifier(vaultifier);
       }
 
-      initializeSoya(new Soya({ service: RepoService.fromVaultifier(vaultifier) }));
-
       if (!vaultifier) {
         this.message = `Sorry. I was not able to create a vaultifier instance.
 Try looking into the browser console to gain more insights on the problem.`;
         this.isInitializing = false;
         return;
       }
+
+      // @ts-expect-error Both vaultifier types are incompatible, as one package uses main-build
+      // and the other uses module-build (but technically they have the same types of course)
+      initializeSoya(new Soya({ service: RepoService.fromVaultifier(vaultifier) }));
 
       try {
         this.vaultSupport = await vaultifier.getVaultSupport();
@@ -222,7 +224,7 @@ Try looking into the browser console to gain more insights on the problem.`;
     },
     hasLogout(): boolean {
       return (this.vaultSupport?.authentication === true && this.isLoggedIn)
-        || (this.vaultSupport?.authenticationMode === 'optional' && this.vaultSupport.user);
+        || (this.vaultSupport?.authenticationMode === 'optional' && !!this.vaultSupport.user);
     },
     additionalNavBarActions(): Action[] {
       const actions: Action[] = [];
