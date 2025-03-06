@@ -8,8 +8,12 @@ interface BaseHeaders {
 
 interface DataHeaders extends BaseHeaders {
   'Accept': string,
-  'Authorization': string,
+  'Authorization'?: string,
 }
+
+// optional authentication means, it sends the token if available
+// but does not complain, if there is no token at all
+type MaybeAuthenticated = boolean | 'optional';
 
 export type NetworkResponse =
   Pick<
@@ -102,10 +106,13 @@ export class Communicator {
     return this.token;
   }
 
-  async get(url: string, usesAuth = false): Promise<NetworkResponse> {
+  async get(url: string, usesAuth: MaybeAuthenticated = false): Promise<NetworkResponse> {
     return this._placeNetworkCall(
       async () => this.networkAdapter.get(url, this._getHeaders(usesAuth)),
-      usesAuth
+      // only for calls that really require authentication
+      // we tell _placeNetworkCall that it's an authenticated call
+      // optional authentication should also work without tokens
+      usesAuth === true
     );
   }
 
@@ -176,9 +183,9 @@ export class Communicator {
     return nro.response;
   }
 
-  private _getHeaders(usesAuth = false): BaseHeaders {
+  private _getHeaders(usesAuth: MaybeAuthenticated = false): BaseHeaders {
     return usesAuth && this._usesAuthentication() ?
-      this._getDataHeaders() :
+      this._getDataHeaders(usesAuth) :
       this._baseHeaders;
   }
 
@@ -186,14 +193,18 @@ export class Communicator {
     'Content-Type': 'application/json',
   }
 
-  private _getDataHeaders(): DataHeaders {
-    if (this.token === undefined)
+  private _getDataHeaders(usesAuth: MaybeAuthenticated): DataHeaders {
+    if (this.token === undefined && !!usesAuth)
       throw new Error('There is no token available. Did you forget to initalize vaultifier?')
 
-    return {
+    const headers: DataHeaders = {
       ...this._baseHeaders,
       Accept: '*/*',
-      Authorization: `Bearer ${this.token}`,
     };
+
+    if (!!usesAuth && this.token)
+      headers['Authorization'] = `Bearer ${this.token}`;
+
+    return headers;
   }
 }

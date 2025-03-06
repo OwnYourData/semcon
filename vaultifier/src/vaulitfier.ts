@@ -75,6 +75,12 @@ export class Vaultifier {
     );
 
     this.communicator = new Communicator();
+    this.addAuthenticationRefreshCallback(() => {
+      // at every token refresh, it may happen that VaultSupport changes
+      // therefore we reset our cache-object, such that for the next call
+      // to getVaultSupport, it will be fetched again
+      this.supports = undefined;
+    });
   }
 
   /**
@@ -85,7 +91,7 @@ export class Vaultifier {
     if (this.supports)
       return this.supports;
 
-    const { data } = await this.communicator.get(this.urls.active);
+    const { data } = await this.communicator.get(this.urls.active, 'optional');
     const oAuth: (OAuthSupport | OAuthIdentityProvider | OAuthExternalProvider)[] = [];
 
     if (Array.isArray(data.oauth)) {
@@ -118,12 +124,18 @@ export class Vaultifier {
       }
     }
 
+    const user = data.user;
     return this.supports = {
       repos: !!data.repos,
       authentication: !!data.auth,
       authenticationMode: data.auth_method?.mode || undefined,
       scopes: data.scopes,
       oAuth,
+      user: user ? {
+        userName: user.user_name,
+        fullName: user.full_name,
+        organization: user.organization,
+      } : undefined,
     };
   }
 
@@ -178,7 +190,7 @@ export class Vaultifier {
   async initialize(): Promise<void> {
     const supports = await this.getVaultSupport()
 
-    if (supports.authentication) {
+    if (supports.authentication || supports.authenticationMode === 'optional') {
       this.communicator.setTokenCallback(() => this._authorize());
       await this.communicator.refreshToken();
     }
