@@ -6,6 +6,7 @@ Rails.application.routes.draw do
     # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
     namespace :api, defaults: { format: :json } do
         scope "(:version)", :version => /v1/, module: :v1 do
+            draw(:extend_api_v1)
             match 'active',             to: 'resources#active',       via: 'get'
             match 'ida-signin',         to: 'resources#idaustria',    via: 'get'
 
