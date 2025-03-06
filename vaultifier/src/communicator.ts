@@ -194,7 +194,7 @@ export class Communicator {
   }
 
   private _getDataHeaders(usesAuth: MaybeAuthenticated): DataHeaders {
-    if (this.token === undefined && !!usesAuth)
+    if (this.token === undefined && usesAuth === true)
       throw new Error('There is no token available. Did you forget to initalize vaultifier?')
 
     const headers: DataHeaders = {
