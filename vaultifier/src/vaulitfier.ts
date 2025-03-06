@@ -118,12 +118,18 @@ export class Vaultifier {
       }
     }
 
+    const user = data.user;
     return this.supports = {
       repos: !!data.repos,
       authentication: !!data.auth,
       authenticationMode: data.auth_method?.mode || undefined,
       scopes: data.scopes,
       oAuth,
+      user: user ? {
+        userName: user.user_name,
+        fullName: user.full_name,
+        organization: user.organization,
+      } : undefined,
     };
   }
 

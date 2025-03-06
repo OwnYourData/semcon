@@ -119,12 +119,19 @@ export interface OAuthExternalProvider {
   imageUrl: string,
 }
 
+export interface VaultUser {
+  userName: string,
+  fullName: string,
+  organization: string,
+}
+
 export interface VaultSupport {
   repos: boolean,
   authentication: boolean,
   authenticationMode: 'optional' | undefined,
   scopes?: string[],
   oAuth?: (OAuthSupport | OAuthIdentityProvider | OAuthExternalProvider)[],
+  user?: VaultUser,
 }
 
 export interface VaultInfo {
