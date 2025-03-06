@@ -50,6 +50,8 @@ export class Vaultifier {
 
   private communicator: Communicator;
 
+  private authCallbacks: Set<(token: string | undefined) => unknown> = new Set();
+
   private supports?: VaultSupport;
   private info?: VaultInfo;
 
@@ -541,6 +543,15 @@ export class Vaultifier {
   }
 
   /**
+   * Adds a listener for changes in authentication.
+   * 
+   * @param callback Callback that is called each time a new authentication token is fetched
+   */
+  addAuthenticationRefreshCallback(callback: (token: string | undefined) => unknown): void {
+    this.authCallbacks.add(callback);
+  }
+
+  /**
    * Resolves an install code (usually 6 digits) and returns a set of VaultCredentials, if successful.
    * VaultCredentials are automatically set to the Vaultifier instance as well.
    *
@@ -651,6 +662,9 @@ export class Vaultifier {
         response = await this.communicator.post(this.urls.token, false, body);
 
       token = response.data.access_token as string;
+
+      // inform all token listeners about the new token
+      this.authCallbacks.forEach(cb => cb(token));
 
       // we only save the credentials if they are appKey and appSecret
       // authorizationCode does not make sense to store
