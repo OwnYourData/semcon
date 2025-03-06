@@ -122,6 +122,7 @@ export interface OAuthExternalProvider {
 export interface VaultSupport {
   repos: boolean,
   authentication: boolean,
+  authenticationMode: 'optional' | undefined,
   scopes?: string[],
   oAuth?: (OAuthSupport | OAuthIdentityProvider | OAuthExternalProvider)[],
 }
