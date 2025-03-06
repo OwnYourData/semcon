@@ -1,6 +1,6 @@
 <template>
   <div class="jumbotron">
-    <h1 class="display-5">DataBud Login</h1>
+    <h1 class="display-5">SOyA Login</h1>
 
     <b-form @submit="submitForm">
       <b-form-group label="App Key:">
