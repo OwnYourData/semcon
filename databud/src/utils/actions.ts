@@ -3,12 +3,20 @@ import { Vaultifier, VaultItem } from "vaultifier";
 import { NetworkResponse } from "vaultifier/dist/module/communicator";
 import Vue from "vue";
 
+export enum ActionMethod {
+  INTERNAL = 'INTERNAL',
+  OPEN = 'OPEN',
+  POST = 'POST',
+  PUT = 'PUT',
+  GET = 'GET',
+}
+
 export interface Action {
   key: string,
   title: string,
   url: string,
   usesAuth: boolean,
-  method: string,
+  method: ActionMethod,
 }
 
 export const executeAction = async (action: Action, vaultifier: Vaultifier, vue?: Vue, item?: VaultItem): Promise<NetworkResponse | undefined> => {
@@ -24,7 +32,7 @@ export const executeAction = async (action: Action, vaultifier: Vaultifier, vue?
   let returnValue: NetworkResponse | undefined = undefined;
 
   // method `OPEN` just opens a new tab
-  if (method === 'OPEN') {
+  if (method === ActionMethod.OPEN) {
     window.open(url, '_blank');
   }
   else
@@ -32,11 +40,11 @@ export const executeAction = async (action: Action, vaultifier: Vaultifier, vue?
       if (url.indexOf(baseUrlPlaceholder) !== -1) {
         const vaultifierUrl = url.replace(baseUrlPlaceholder, '');
 
-        if (method === 'POST')
+        if (method === ActionMethod.POST)
           returnValue = await vaultifier.post(vaultifierUrl, usesAuth);
-        else if (method === 'PUT')
+        else if (method === ActionMethod.PUT)
           returnValue = await vaultifier.put(vaultifierUrl, usesAuth);
-        else if (method === 'GET')
+        else if (method === ActionMethod.GET)
           returnValue = await vaultifier.get(vaultifierUrl, usesAuth);
         else
           throw new Error(`Invalid method for action ${key}`);
@@ -60,7 +68,7 @@ export const executeAction = async (action: Action, vaultifier: Vaultifier, vue?
         vue.$bvModal.msgBoxOk(`The action "${title}" has failed.`);
     }
 
-    return returnValue;
+  return returnValue;
 }
 
 export const getActionsFromConfig = (...path: string[]): Action[] => {

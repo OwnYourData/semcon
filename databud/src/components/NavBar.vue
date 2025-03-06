@@ -62,7 +62,7 @@ import { getInstance } from '@/services';
 import { IStore } from '@/store';
 import { ActionType } from '@/store/action-type';
 import { VaultEncryptionSupport } from 'vaultifier';
-import { Action, executeAction, getActionsFromConfig } from '../utils/actions';
+import { Action, ActionMethod, executeAction, getActionsFromConfig } from '../utils/actions';
 import Vue, { PropType } from 'vue'
 
 import { ConfigService, PACKAGE } from '../services/config-service';
@@ -70,9 +70,6 @@ import { ConfigService, PACKAGE } from '../services/config-service';
 interface Data {
   workingAction?: Action,
 }
-
-const INTERNAL_ACTION = 'internal';
-
 export default Vue.extend({
   props: {
     encryptionSupport: Object as PropType<VaultEncryptionSupport>,
@@ -81,6 +78,7 @@ export default Vue.extend({
     description: String as PropType<string | undefined>,
     url: String as PropType<string | undefined>,
     hasLogout: Boolean as PropType<boolean | undefined>,
+    additionalActions: Array as PropType<Action[] | undefined>,
   },
   data: (): Data => ({
     workingAction: undefined,
@@ -89,7 +87,7 @@ export default Vue.extend({
     async executeAction(action: Action) {
       this.workingAction = action;
 
-      if (action.method === INTERNAL_ACTION)
+      if (action.method === ActionMethod.INTERNAL)
         this.$emit(action.key, action);
       else
         await executeAction(action, getInstance(), this);
@@ -125,13 +123,14 @@ export default Vue.extend({
     },
     actions(): Action[] {
       const actions = [
+        ...(this.additionalActions ?? []),
         ...getActionsFromConfig('settings', 'actions'),
       ];
 
       if (this.hasLogout) {
         actions.push({
           key: 'logout',
-          method: INTERNAL_ACTION,
+          method: ActionMethod.INTERNAL,
           title: 'Logout',
           url: '',
           usesAuth: false,

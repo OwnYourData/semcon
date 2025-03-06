@@ -7,7 +7,9 @@
         :description="description"
         :url="vaultUrl"
         :hasLogout="hasLogout"
+        :additionalActions="additionalNavBarActions"
         @logout="logOut"
+        @login="showLoginForm"
       >
       </nav-bar>
     </b-container>
@@ -54,6 +56,8 @@ import { RouteParams } from "./router/routes";
 import { IStore } from "./store";
 import { ConfigService } from "./services/config-service";
 import { RepoService, Soya } from "soya-js";
+import { Action, ActionMethod } from "./utils/actions";
+import { ActionType } from "./store/action-type";
 
 const isLoginData = (data: any): data is LoginData => {
   const d = data as LoginData;
@@ -105,21 +109,48 @@ export default Vue.extend({
     async tryInitializeVaultifier(credentials?: OAuthIdentityProvider | OAuthExternalProvider | LoginData) {
       this.isInitializing = true;
 
-      // Here we removed quite substantial amount of code from the original data bud
-      // as we currently don't have VaultifierWeb configuration for SOyA
+      let vaultifier: Vaultifier | undefined = undefined;
 
-      const { searchParams } = new URL(window.location.href);
-      let endpointUrl = searchParams.get('PIA_URL')?.trim();
-      if (!endpointUrl) {
-        endpointUrl = `${window.location.protocol}//${window.location.host}`;
+      const vw = await VaultifierWeb.create({
+        baseUrl: ConfigService.get('endpoint', 'url'),
+        clientId: ConfigService.get('endpoint', 'clientId'),
+      });
+
+      if (vw.vaultifier)
+        this.vaultUrl = vw.vaultifier.urls.baseUrl;
+
+      try {
+        if (credentials) {
+          // APP_KEY and APP_SECRET based authentication
+          if (vw.vaultifier && isLoginData(credentials)) {
+            vw.vaultifier.setCredentials(credentials);
+            await vw.vaultifier.initialize();
+          }
+          // external authentication provider
+          else if ((credentials as OAuthExternalProvider).link) {
+            // just redirect to the external oAuth provider
+            window.location.href = (credentials as OAuthExternalProvider).link;
+            return;
+          }
+          // external authentication provider
+          else {
+            await vw.initialize({
+              oAuthType: credentials as OAuthIdentityProvider,
+            });
+          }
+        }
+        else
+          await vw.initialize();
+      } catch (e) {
+        console.error(e);
       }
-      initializeSoya(new Soya({ service: new RepoService(endpointUrl) }));
 
-      // TODO: This is a quirky type conversion, but since vaultifier version 3.x supports the new generation of SemCons
-      // SOyA and new SemCons are currently not compatible (and thus soya-js still builds upon vaultifier version 2.x)
-      // However, for the use in this project the differences should not be noticable, thus the conversion is okayish
-      let vaultifier: Vaultifier = await soya.service.getVaultifier() as unknown as Vaultifier;
-      setVaultifier(vaultifier);
+      if (vw.vaultifier) {
+        vaultifier = vw.vaultifier;
+        setVaultifier(vaultifier);
+      }
+
+      initializeSoya(new Soya({ service: RepoService.fromVaultifier(vaultifier) }));
 
       if (!vaultifier) {
         this.message = `Sorry. I was not able to create a vaultifier instance.
@@ -163,6 +194,9 @@ Try looking into the browser console to gain more insights on the problem.`;
       this.isLoggedIn = false;
       VaultifierWeb.clearAuthentication();
     },
+    showLoginForm() {
+      this.isLoggedIn = false;
+    },
   },
   computed: {
     hasMessage(): boolean {
@@ -187,8 +221,41 @@ Try looking into the browser console to gain more insights on the problem.`;
       return this.vaultSupport?.oAuth;
     },
     hasLogout(): boolean {
-      return this.vaultSupport?.authentication === true && this.isLoggedIn;
-    }
+      return (this.vaultSupport?.authentication === true && this.isLoggedIn)
+        || (this.vaultSupport?.authenticationMode === 'optional' && this.vaultSupport.user);
+    },
+    additionalNavBarActions(): Action[] {
+      const actions: Action[] = [];
+      if (this.vaultSupport?.authenticationMode === 'optional') {
+        if (this.vaultSupport.user) {
+          actions.push({
+            key: 'user-profile',
+            method: ActionMethod.OPEN,
+            title: this.vaultSupport.user.fullName,
+            url: '/soya/user',
+            usesAuth: true,
+          });
+        } else {
+          actions.push({
+            key: 'login',
+            method: ActionMethod.INTERNAL,
+            title: 'Login',
+            url: '',
+            usesAuth: false,
+          });
+
+          actions.push({
+            key: 'user-register',
+            method: ActionMethod.OPEN,
+            title: 'Register',
+            url: '/soya/register',
+            usesAuth: false,
+          });
+        }
+      }
+
+      return actions;
+    },
   },
   watch: {
     title() {
