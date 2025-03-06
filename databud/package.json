@@ -1,7 +1,7 @@
 {
   "name": "oyd-databud",
   "version": "1.6.0",
-  "subVersion": "0.3.0",
+  "subVersion": "0.4.0",
   "license": "MIT",
   "private": "true",
   "scripts": {
