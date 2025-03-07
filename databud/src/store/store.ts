@@ -170,8 +170,13 @@ export const getStore = () => {
         });
       },
       async [ActionType.DELETE_VAULT_ITEM]({ state, commit, dispatch }, payload: VaultMeta) {
-        // TODO: implement
-        throw new Error('Not implemented');
+        if (payload.dri)
+          await soya.delete(payload.dri);
+        else
+          throw new Error('Delete needs payload to have a DRI');
+
+        if (state.vaultItem.current?.id === payload.id)
+          commit(MutationType.SET_VAULT_ITEM, undefined);
       },
       async [ActionType.FETCH_SCHEMA_DRIS]({ commit, dispatch }) {
         await doFetch<VaultSchema[]>(
