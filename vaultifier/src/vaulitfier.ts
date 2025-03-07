@@ -1,4 +1,4 @@
-import { Communicator, NetworkAdapter, NetworkResponse } from './communicator';
+import { Communicator, MaybeAuthenticated, NetworkAdapter, NetworkResponse } from './communicator';
 import { StorageKey } from './constants';
 import { CryptoObject, decrypt, encrypt } from './crypto';
 import { UnauthorizedError } from './errors';
@@ -317,7 +317,7 @@ export class Vaultifier {
    */
   post = async (
     url: string,
-    usesAuth?: boolean,
+    usesAuth?: MaybeAuthenticated,
     data?: any,
   ): Promise<NetworkResponse> => this.communicator.post(this.urls.getGenericUrl(url), usesAuth, data);
 
@@ -330,7 +330,7 @@ export class Vaultifier {
    */
   put = async (
     url: string,
-    usesAuth?: boolean,
+    usesAuth?: MaybeAuthenticated,
     data?: any,
   ): Promise<NetworkResponse> => this.communicator.put(this.urls.getGenericUrl(url), usesAuth, data);
 
@@ -342,22 +342,37 @@ export class Vaultifier {
    */
   get = async (
     url: string,
-    usesAuth?: boolean,
+    usesAuth?: MaybeAuthenticated,
   ): Promise<NetworkResponse> => this.communicator.get(this.urls.getGenericUrl(url), usesAuth);
+
+  /**
+   * A generic method to delete data from the data container
+   * 
+   * @param url Url where to send the request to. Has to start with a leading slash "/"
+   * @param usesAuth Whether or not the call should be authorized or not
+   */
+  delete = async (
+    url: string,
+    usesAuth?: MaybeAuthenticated,
+  ): Promise<NetworkResponse> => this.communicator.delete(this.urls.getGenericUrl(url), usesAuth);
 
   /**
    * Posts a value into the data container's repository, without any metadata
    *
    * @param {Object} value JSON data to post into the repository
+   * @param {boolean} usesAuth Whether or not the call should be authorized or not
    *
    * @returns {Promise<VaultMinMeta>}
    */
-  async postData(value: any): Promise<VaultMinMeta> {
+  async postData(
+    value: any,
+    usesAuth: MaybeAuthenticated = true,
+  ): Promise<VaultMinMeta> {
     const postData = await this.getPutpostData({
       data: value,
     });
 
-    const res = await this.communicator.post(this.urls.postData, true, postData);
+    const res = await this.communicator.post(this.urls.postData, usesAuth, postData);
 
     return parsePostResult(res);
   }
