@@ -13,7 +13,7 @@ interface DataHeaders extends BaseHeaders {
 
 // optional authentication means, it sends the token if available
 // but does not complain, if there is no token at all
-type MaybeAuthenticated = boolean | 'optional';
+export type MaybeAuthenticated = boolean | 'optional';
 
 export type NetworkResponse =
   Pick<
@@ -109,28 +109,25 @@ export class Communicator {
   async get(url: string, usesAuth: MaybeAuthenticated = false): Promise<NetworkResponse> {
     return this._placeNetworkCall(
       async () => this.networkAdapter.get(url, this._getHeaders(usesAuth)),
-      // only for calls that really require authentication
-      // we tell _placeNetworkCall that it's an authenticated call
-      // optional authentication should also work without tokens
-      usesAuth === true
+      usesAuth
     );
   }
 
-  async post(url: string, usesAuth = false, data?: any): Promise<NetworkResponse> {
+  async post(url: string, usesAuth: MaybeAuthenticated = false, data?: any): Promise<NetworkResponse> {
     return this._placeNetworkCall(
       async () => this.networkAdapter.post(url, data, this._getHeaders(usesAuth)),
       usesAuth
     );
   }
 
-  async put(url: string, usesAuth = false, data?: any): Promise<NetworkResponse> {
+  async put(url: string, usesAuth: MaybeAuthenticated = false, data?: any): Promise<NetworkResponse> {
     return this._placeNetworkCall(
       async () => this.networkAdapter.put(url, data, this._getHeaders(usesAuth)),
       usesAuth
     );
   }
 
-  async delete(url: string, usesAuth = false): Promise<NetworkResponse> {
+  async delete(url: string, usesAuth: MaybeAuthenticated = false): Promise<NetworkResponse> {
     return this._placeNetworkCall(
       async () => this.networkAdapter.delete(url, this._getHeaders(usesAuth)),
       usesAuth,
@@ -153,7 +150,7 @@ export class Communicator {
 
   private async _placeNetworkCall(
     callable: () => Promise<NetworkResponse>,
-    isAuthenticated = false,
+    isAuthenticated: MaybeAuthenticated = false,
     recursionCount = 0,
   ): Promise<NetworkResponse> {
     let nro: NetworkResponseObject = await this.tryCatch(callable);
@@ -163,7 +160,10 @@ export class Communicator {
 
     // only try to refresh authentication, if recursion count is still 0
     // otherwise we'll end up in an infinite loop
-    if (isAuthenticated && recursionCount === 0) {
+    //
+    // only for calls that really require authentication
+    // optional authentication should also work without tokens
+    if (isAuthenticated === true && recursionCount === 0) {
       // if data container responds with a 401, our token is expired
       // therefore we fetch a new one and give the call another try
       if (nro.response.status === 401 && this._usesAuthentication()) {
