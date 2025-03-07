@@ -157,7 +157,7 @@ export class Vaultifier {
    * @returns the usage policy (which format is (Turtle)[https://www.w3.org/TR/turtle/]) as a string
    */
   async getUsagePolicy(): Promise<string> {
-    const { data } = await this.communicator.get(this.urls.usagePolicy, true);
+    const { data } = await this.communicator.get(this.urls.usagePolicy, 'optional');
 
     return data;
   }
@@ -239,7 +239,7 @@ export class Vaultifier {
     }
     else {
       try {
-        this.publicKey = (await this.communicator.get(this.urls.publicKey(), true))
+        this.publicKey = (await this.communicator.get(this.urls.publicKey(), 'optional'))
           .data.public_key;
 
         if (this.options.privateKeyCredentials) {
@@ -256,7 +256,7 @@ export class Vaultifier {
           });
 
           const encryptedPrivateKey = JSON.parse(
-            (await this.communicator.get(this.urls.privateKey, true))
+            (await this.communicator.get(this.urls.privateKey, 'optional'))
               .data.password_key
           );
 
@@ -385,7 +385,7 @@ export class Vaultifier {
    * @returns {Promise<VaultData>} the value of the specified item
    */
   async getData(query: VaultItemQuery): Promise<VaultData> {
-    const res = await this.communicator.get(this.urls.getData(query), true);
+    const res = await this.communicator.get(this.urls.getData(query), 'optional');
     const item = res.data as VaultData;
 
     try {
@@ -427,7 +427,7 @@ export class Vaultifier {
    * @returns {Promise<VaultMinMeta>}
    */
   async postItem(item: VaultPostItem): Promise<VaultMinMeta> {
-    const res = await this.communicator.post(this.urls.postItem, true, await this.getPutpostData(item));
+    const res = await this.communicator.post(this.urls.postItem, 'optional', await this.getPutpostData(item));
 
     return parsePostResult(res);
   }
@@ -438,7 +438,7 @@ export class Vaultifier {
    * @param item data that is going to be passed to the data container for updating the record
    */
   async updateItem(item: VaultPostItem): Promise<VaultMinMeta> {
-    const res = await this.communicator.put(this.urls.putItem(item), true, await this.getPutpostData(item));
+    const res = await this.communicator.put(this.urls.putItem(item), 'optional', await this.getPutpostData(item));
 
     return res.data as VaultMinMeta;
   }
@@ -451,7 +451,7 @@ export class Vaultifier {
    * @returns {Promise<VaultItem>}
    */
   async getItem(query: VaultItemQuery): Promise<VaultItem> {
-    const { data } = await this.communicator.get(this.urls.getItem(query), true);
+    const { data } = await this.communicator.get(this.urls.getItem(query), 'optional');
 
     return parseVaultItem(data, this.privateKey);
   }
@@ -465,7 +465,7 @@ export class Vaultifier {
    * @deprecated currently not implemented, might be re-enabled in a future release
    */
   async getProvis(query: VaultItemQuery): Promise<string[]> {
-    const { data } = await this.communicator.get(this.urls.getProvis(query), true);
+    const { data } = await this.communicator.get(this.urls.getProvis(query), 'optional');
 
     return data;
   }
@@ -476,7 +476,7 @@ export class Vaultifier {
    * @param query Query parameters to specify the record that has to be queried
    */
   async getItems(query?: VaultItemsQuery): Promise<MultiResponse<VaultItem>> {
-    const response = await this.communicator.get(this.urls.getItems(query), true);
+    const response = await this.communicator.get(this.urls.getItems(query), 'optional');
 
     const items = await Promise.all<VaultItem>(response.data.map(async (data: any) => parseVaultItem(data, this.privateKey)));
 
@@ -494,7 +494,7 @@ export class Vaultifier {
    * @returns {Promise<VaultMinMeta>}
    */
   async deleteItem(query: VaultItemQuery): Promise<VaultMinMeta> {
-    const { data } = await this.communicator.delete(this.urls.deleteItem(query), true);
+    const { data } = await this.communicator.delete(this.urls.deleteItem(query), 'optional');
 
     return data as VaultMinMeta;
   }
@@ -505,7 +505,7 @@ export class Vaultifier {
    * @param query Query parameter to specify the records that have to be deleted
    */
   async getMetaItems(query?: VaultItemsQuery): Promise<MultiResponse<VaultMeta>> {
-    const response = await this.communicator.get(this.urls.getMetaItems(query), true);
+    const response = await this.communicator.get(this.urls.getMetaItems(query), 'optional');
 
     return {
       items: response.data.map(parseVaultItemMeta),
@@ -520,7 +520,7 @@ export class Vaultifier {
    */
   async getRepos(): Promise<VaultRepo[] | undefined> {
     if ((await this.getVaultSupport()).repos) {
-      const { data } = await this.communicator.get(this.urls.getRepos, true);
+      const { data } = await this.communicator.get(this.urls.getRepos, 'optional');
       return data as VaultRepo[];
     }
 
@@ -532,7 +532,7 @@ export class Vaultifier {
    * Queries all SOyA schemas that are available within the user's vault
    */
   async getSchemas(): Promise<VaultSchema[]> {
-    const { data } = await this.communicator.get(this.urls.getSchemas(), true);
+    const { data } = await this.communicator.get(this.urls.getSchemas(), 'optional');
 
     return data.map((x: any) => ({
       dri: x,
@@ -608,7 +608,7 @@ export class Vaultifier {
    * @deprecated currently not implemented, might be re-enabled in a future release
    */
   async getEidasToken(id: number): Promise<string> {
-    const { data } = await this.communicator.post(this.urls.eidasToken, true, {
+    const { data } = await this.communicator.post(this.urls.eidasToken, 'optional', {
       id,
     });
 
