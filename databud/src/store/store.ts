@@ -285,7 +285,7 @@ export const getStore = () => {
         await doFetch<SoyaVaultItem>(
           commit,
           async () => {
-            const res = await soya.service.get(`/api/data?id=${payload.id}`, true);
+            const res = await soya.service.get(`/api/data?id=${payload.id}`, false);
 
             return {
               id: payload.id,
