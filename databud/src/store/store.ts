@@ -81,7 +81,9 @@ async function doFetch<T>(
     commitObj.state = FetchState.SUCCESS;
     commit(MutationType.SET_FETCH_STATE, commitObj)
   }
-  catch {
+  catch (e) {
+    console.error(e);
+
     commitObj.state = FetchState.ERROR;
     commit(MutationType.SET_FETCH_STATE, commitObj);
   }
