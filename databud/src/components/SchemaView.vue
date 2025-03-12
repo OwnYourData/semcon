@@ -82,13 +82,6 @@
       </b-tabs>
     </section>
     <b-container v-if="showEditView">
-      <b-alert
-        v-if="saveMessage"
-        show
-        variant="danger"
-      >
-        {{saveMessage}}
-      </b-alert>
       <form-edit-view
         class="col-md-12 form-edit-view"
         :schemaDri="editViewSchemaDri"
@@ -123,7 +116,6 @@ interface IData {
   editViewSchema?: VaultSchema,
   isSaving: boolean,
   isExecutingAction: boolean,
-  saveMessage?: string,
   searchText: string,
 
   // charting
@@ -144,7 +136,6 @@ export default Vue.extend({
     editViewSchema: undefined,
     isSaving: false,
     isExecutingAction: false,
-    saveMessage: undefined,
     searchText: '',
 
     // charting
@@ -214,8 +205,17 @@ export default Vue.extend({
       await this.$store.dispatch(ActionType.FETCH_VAULT_ITEMS, fetchObj);
     },
     async deleteSelectedVaultItem() {
-      await this.$store.dispatch(ActionType.DELETE_VAULT_ITEM, this.selectedVaultItem);
-      await this.fetchSchemas();
+      try {
+        await this.$store.dispatch(ActionType.DELETE_VAULT_ITEM, this.selectedVaultItem);
+        await this.fetchSchemas();
+      } catch (e: any) {
+        console.error(e);
+        this.$bvToast.toast(e.message ?? 'Unknown error', {
+          title: 'Error while deleting item',
+          variant: 'danger',
+          solid: true,
+        });
+      }
     },
     async addItem() {
       await this.selectVaultItem(undefined);
@@ -256,15 +256,18 @@ export default Vue.extend({
       this.isExecutingAction = false;
     },
     async saveVaultItem(postItem: VaultPostItem, onComplete?: () => void) {
-      this.saveMessage = undefined;
       this.isSaving = true;
 
       try {
         await this.$store.dispatch(ActionType.UPDATE_VAULT_ITEM, postItem);
         this._showEditView(false);
-      } catch (e) {
+      } catch (e: any) {
         console.error(e);
-        this.saveMessage = 'Could not save item';
+        this.$bvToast.toast(e.message ?? 'Unknown error', {
+          title: 'Error while saving item',
+          variant: 'danger',
+          solid: true
+        });
       }
 
       await this.fetchVaultItems();
@@ -276,7 +279,6 @@ export default Vue.extend({
     },
     _showEditView(show: boolean) {
       this.showEditView = show;
-      this.saveMessage = undefined;
       this.editViewSchema = this.selectedSchema;
 
       this.$emit('showEditView', this.showEditView);

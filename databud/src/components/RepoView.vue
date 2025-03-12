@@ -91,8 +91,17 @@ export default Vue.extend({
       this.$store.dispatch(ActionType.FETCH_VAULT_ITEMS, fetchObj);
     },
     async deleteSelectedVaultItem() {
-      await this.$store.dispatch(ActionType.DELETE_VAULT_ITEM, this.selectedVaultItem);
-      this.fetchRepos();
+      try {
+        await this.$store.dispatch(ActionType.DELETE_VAULT_ITEM, this.selectedVaultItem);
+        this.fetchRepos();
+      } catch (e: any) {
+        console.error(e);
+        this.$bvToast.toast(e.message ?? 'Unknown error', {
+          title: 'Error while deleting item',
+          variant: 'danger',
+          solid: true,
+        });
+      }
     },
   },
   computed: {
