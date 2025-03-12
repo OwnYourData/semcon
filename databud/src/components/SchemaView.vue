@@ -210,7 +210,7 @@ export default Vue.extend({
         await this.fetchSchemas();
       } catch (e: any) {
         console.error(e);
-        this.$bvToast.toast(e.message ?? 'Unknown error', {
+        this.$bvToast.toast(e.message || 'Unknown error', {
           title: 'Error while deleting item',
           variant: 'danger',
           solid: true,
@@ -263,7 +263,7 @@ export default Vue.extend({
         this._showEditView(false);
       } catch (e: any) {
         console.error(e);
-        this.$bvToast.toast(e.message ?? 'Unknown error', {
+        this.$bvToast.toast(e.message || 'Unknown error', {
           title: 'Error while saving item',
           variant: 'danger',
           solid: true
