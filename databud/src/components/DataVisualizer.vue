@@ -9,13 +9,6 @@
         title="SOyA Structure"
         v-if="showRawView"
       >
-        <b-alert
-          v-if="saveMessage"
-          show
-          variant="danger"
-        >
-          {{saveMessage}}
-        </b-alert>
         <raw-data
           :item="item"
           :language="language"
@@ -73,7 +66,6 @@ import { IStore, MutationType } from '../store';
 interface Data {
   isSaving: boolean;
   activeTabIndex: number;
-  saveMessage?: string;
 }
 
 export default Vue.extend({
@@ -87,7 +79,6 @@ export default Vue.extend({
   data: (): Data => ({
     isSaving: false,
     activeTabIndex: 0,
-    saveMessage: undefined,
   }),
   components: {
     RawData,
@@ -106,14 +97,17 @@ export default Vue.extend({
   },
   methods: {
     async saveVaultItem(item: VaultPostItem, onComplete?: () => void) {
-      this.saveMessage = undefined;
       this.isSaving = true;
 
       try {
         await this.$store.dispatch(ActionType.UPDATE_VAULT_ITEM, item);
       } catch (e: any) {
         console.error(e);
-        this.saveMessage = e.message ?? 'Could not save item';
+        this.$bvToast.toast(e.message ?? "Unknown error", {
+          title: "Error while saving item",
+          variant: "danger",
+          solid: true,
+        });
       }
 
       this.isSaving = false;
