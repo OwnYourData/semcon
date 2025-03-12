@@ -103,7 +103,7 @@ export default Vue.extend({
         await this.$store.dispatch(ActionType.UPDATE_VAULT_ITEM, item);
       } catch (e: any) {
         console.error(e);
-        this.$bvToast.toast(e.message ?? "Unknown error", {
+        this.$bvToast.toast(e.message || "Unknown error", {
           title: "Error while saving item",
           variant: "danger",
           solid: true,
