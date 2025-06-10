@@ -1,31 +1,70 @@
 {
-  "name": "semcon",
-  "description": "accessing Semantic Containers",
-  "version": "0.0.2",
-  "author": "Christoph Fabianek",
+  "name": "semcon-js",
+  "version": "0.3.0",
+  "description": "",
+  "main": "dist/module/index.js",
+  "typings": "dist/module/index.d.ts",
+  "module": "dist/module/index.js",
+  "repository": "https://github.com/OwnYourData/semcon",
   "license": "MIT",
-  "main": "index.js",
-  "repository": {
-    "type": "git",
-    "url": "git@github.com/OwnYourData/semcon"
+  "keywords": [],
+  "engines": {
+    "node": ">=22.0.0"
   },
-  "files": [
-    "dist"
-  ],
-  "keywords": [
-    "Semantic Container"
-  ],
   "scripts": {
-    "start": "tsc -w",
-    "build": "tsc",
-    "test": "node ./test/index.js"
-  },
-  "devDependencies": {
-    "@types/node": "^16.11.11",
-    "typescript": "^4.5.2"
+    "build": "run-p build:*",
+    "build:main": "tsc -p tsconfig.json",
+    "build:module": "tsc -p tsconfig.module.json",
+    "watch": "tsc -w",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint ./src --ext .ts",
+    "doc": "typedoc src --out docs",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "axios": "^0.24.0",
-    "oydid": "^0.0.2"
+    "oidc-client": "^1.11.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^2.1.1",
+    "typedoc": "^0.25.0",
+    "typescript": "^5.4.0"
+  },
+  "files": [
+    "dist/main",
+    "dist/module",
+    "!**/*.spec.*",
+    "!**/*.json",
+    "CHANGELOG.md",
+    "LICENSE",
+    "README.md"
+  ],
+  "ava": {
+    "failFast": true,
+    "timeout": "60s",
+    "typescript": {
+      "rewritePaths": {
+        "src/": "dist/module/"
+      }
+    },
+    "files": [
+      "!dist/module/**"
+    ]
+  },
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
+  },
+  "prettier": {
+    "singleQuote": true
+  },
+  "nyc": {
+    "extends": "@istanbuljs/nyc-config-typescript",
+    "exclude": [
+      "**/*.spec.js"
+    ]
   }
 }

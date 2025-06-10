@@ -54,6 +54,14 @@ module Api
                             end
                             meta_data = input["meta"].except(:schema, "schema") rescue nil
                             schema = input["meta"]["schema"] rescue nil
+                            # hack for SOyA - should be fixed, i.e. providing soya_yaml in meta
+                            soya_yaml = params.permit!["soya_yaml"]
+                            if !soya_yaml.nil?
+                                if meta_data.nil?
+                                    meta_data = {}
+                                end
+                                meta_data["soya_yaml"] = soya_yaml
+                            end
                         else
                             # Legacy Structured data
                             item_data = input["data"]["content"]

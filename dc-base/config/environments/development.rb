@@ -26,7 +26,6 @@ Rails.application.configure do
     }
   else
     config.action_controller.perform_caching = false
-
     config.cache_store = :null_store
   end
 
@@ -55,7 +54,5 @@ Rails.application.configure do
   # Uncomment if you wish to allow Action Cable access from any origin.
   # config.action_cable.disable_request_forgery_protection = true
 
-  # config.hosts << "dec-backup.data-container.net"
-  # config.hosts << "dec-support.data-container.net"
   config.hosts << ENV["RAILS_CONFIG_HOSTS"].to_s
 end

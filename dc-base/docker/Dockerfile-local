@@ -1,4 +1,4 @@
-FROM ruby:3.2.2
+FROM ruby:3.2.8
 LABEL maintainer="Christoph Fabianek <christoph@ownyourdata.eu>"
 
 WORKDIR /usr/src/app
@@ -20,7 +20,7 @@ RUN git config --global url."https://".insteadOf git:// && \
 	gem update --system && \
 	bundle install && \
 	bundle update && \
-	rake app:update:bin && \
+# 	rake app:update:bin && \
 	ln -s $PWD/script/init.sh /bin/init.sh
 
 COPY . .
