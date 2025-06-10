@@ -292,6 +292,8 @@ export const getStore = () => {
               dri: payload.dri,
               createdAt: res.created_at,
               updatedAt: res.updated_at,
+              author: res.author,
+              organization: res.organization,
               isEncrypted: false,
               meta: res.meta,
               raw: res,
