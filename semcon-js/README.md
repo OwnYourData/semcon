@@ -7,26 +7,24 @@ A js-library to interact with Semanic Container.
 ## Example
 
 ```javascript
-import { Semcon } from 'semcon-js/dist/module'
+import { Semcon } from 'semcon-js';
 
-const semcon = new Semcon(
-  'https://playground.data-container.net',
-  {
-    appKey: 'app_key',
-    appSecret: 'super_secret',
-  },
-);
+async function main() {
 
-// authenticate Semcon against a data container
-await semcon.initialize();
+  # connect data container
+  const semcon = new Semcon('https://playground2.data-container.net');
+  await semcon.initialize();
 
-// check if provided data is valid and Semcon is authenticated (optional)
-console.log(`connection is ${semcon.isValid() ? 'valid' : 'invalid'}`);
+  // check if provided data is valid
+  const isValid = await semcon.isValid();
+  console.log(`connection is ${isValid ? 'valid' : 'invalid'}`);
 
-// send data
-await semcon.postItem({
-  foo: 'bar',
-});
+  // read a record
+  const item = await semcon.getItem({id: 110});
+  console.log('data:', item); 
+}
+
+main().catch(console.error);
 ```
 
 ## Install
