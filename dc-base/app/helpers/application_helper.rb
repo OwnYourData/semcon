@@ -346,4 +346,29 @@ module ApplicationHelper
         id = id.split(LOCATION_PREFIX).first.split(CGI.escape LOCATION_PREFIX).first rescue id
         id.delete_prefix("did:oyd:")
     end
+
+    def getToken(url, key, secret, scope='write')
+        rensponse_nil = false
+        begin
+            response = HTTParty.post(url, 
+                headers: { 'Content-Type' => 'application/json' },
+                body: { client_id: key, 
+                        client_secret: secret, 
+                        scope: scope,
+                        grant_type: "client_credentials" }.to_json )
+        rescue => ex
+            response_nil = true
+        end
+        if response_nil
+            return nil
+        else
+            token = response.parsed_response["access_token"].to_s rescue nil
+            if token.to_s == ""
+                nil
+            else
+                return token
+            end
+        end
+    end
+
 end

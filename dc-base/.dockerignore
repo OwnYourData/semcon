@@ -9,3 +9,4 @@ Gemfile.lock
 build.sh
 README.md
 .DS_Store
+config/credentials/production.key
