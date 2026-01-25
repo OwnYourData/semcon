@@ -7,7 +7,7 @@ Gem::Specification.new do |gem|
 
     gem.name                  = "semcon"
     gem.homepage              = "http://github.com/ownyourdata/semcon"
-    gem.license               = 'MIT'
+    gem.license               = 'Apache-2.0'
     gem.summary               = "Semantic Container handling in Ruby."
     gem.description           = "This gem provides the basic methods for managing Semantic Containers."
     gem.metadata           = {
@@ -23,10 +23,10 @@ Gem::Specification.new do |gem|
     gem.files                 = %w(AUTHORS README.md LICENSE VERSION) + Dir.glob('lib/**/*.rb')
     gem.test_files            = Dir.glob('spec/**/*.rb') + Dir.glob('spec/**/*.json') + Dir.glob('spec/**/*.doc')
 
-    gem.required_ruby_version = '>= 2.6.9'
+    gem.required_ruby_version = '>= 3.2.8'
     gem.requirements          = []
-    gem.add_dependency 'httparty',              '~> 0.21'
-    gem.add_dependency 'oydid',                 '~> 0.5.6'
+    gem.add_dependency 'httparty',              '~> 0.23'
+    gem.add_dependency 'oydid',                 '~> 0.5.9'
 
     gem.add_development_dependency 'rspec',     '~> 3.10'
 

@@ -37,4 +37,4 @@ Supported by the Federal Ministry for Climate Protection, Environment, Energy, M
 
 ## Lizenz
 
-[MIT License 2022 - OwnYourData.eu](https://raw.githubusercontent.com/OwnYourData/oyd-databud/master/LICENSE)
+[Apache 2.0 License - OwnYourData.eu](https://raw.githubusercontent.com/OwnYourData/semcon/main/LICENSE)

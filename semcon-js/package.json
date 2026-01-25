@@ -6,7 +6,7 @@
   "typings": "dist/module/index.d.ts",
   "module": "dist/module/index.js",
   "repository": "https://github.com/OwnYourData/semcon",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "keywords": [],
   "engines": {
     "node": ">=22.0.0"

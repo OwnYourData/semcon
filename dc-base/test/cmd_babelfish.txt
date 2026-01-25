@@ -8,7 +8,7 @@ echo '[{
   }]' | ~/semcon/oydid/cli/oydid.rb create -l https://honey-oc3.data-container.net -z 1 --doc-pwd 1 --rev-pwd 1
 # created did:oyd:zQmUPfENuoTg7Tqu7FWfLGRty4R1mVpFstNbZfF77zByNpq%40honey-oc3.data-container.net
 
-Doorkeeper::Application.create!({name: 'master', uid: 'rkgYEN5QXmsFcwbH-awWoo9Q5BJd6vdGoyzRHI0lOzs', secret: 'AoaoR9-Aj7woafUW7hnARWVbNqaBxINiqteyMDMuboA', redirect_uri: 'urn:ietf:wg:oauth:2.0:oob', scopes: 'admin write read'})
+Doorkeeper::Application.create!({name: 'main', uid: 'rkgYEN5QXmsFcwbH-awWoo9Q5BJd6vdGoyzRHI0lOzs', secret: 'AoaoR9-Aj7woafUW7hnARWVbNqaBxINiqteyMDMuboA', redirect_uri: 'urn:ietf:wg:oauth:2.0:oob', scopes: 'admin write read'})
 
 Doorkeeper::Application.create!({name: 'oydid', redirect_uri: 'urn:ietf:wg:oauth:2.0:oob', scopes: 'write read'})
 

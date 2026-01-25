@@ -238,6 +238,14 @@ module Api
                                     response_object["data"] = retVal["item"]
                                 end
                             end
+
+                            # q-Filter
+                            if !params[:q].nil?
+                                filter_field = params[:q_field] || 'title'
+                                response_object = response_object.select { 
+                                    |e| e[filter_field].to_s.downcase.include?(params[:q].to_s.downcase) }
+                            end
+
                         else
                             schema = nil
                             if retVal["item"].nil?

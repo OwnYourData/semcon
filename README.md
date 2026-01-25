@@ -36,4 +36,4 @@ If you want to contribute, please follow these steps:
 
 ## License
 
-[MIT License 2023 - OwnYourData.eu](https://raw.githubusercontent.com/OwnYourData/semcon/main/LICENSE)
+[Apache 2.0 License - OwnYourData.eu](https://raw.githubusercontent.com/OwnYourData/semcon/main/LICENSE)
