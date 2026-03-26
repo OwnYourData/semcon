@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_08_14_224309) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_22_101201) do
   create_table "credentials", force: :cascade do |t|
     t.string "identifier"
     t.text "vc"
@@ -81,6 +81,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_08_14_224309) do
     t.string "scopes"
     t.string "previous_refresh_token", default: "", null: false
     t.string "public_key"
+    t.string "auth_method"
     t.index ["application_id"], name: "index_oauth_access_tokens_on_application_id"
     t.index ["refresh_token"], name: "index_oauth_access_tokens_on_refresh_token", unique: true
     t.index ["resource_owner_id"], name: "index_oauth_access_tokens_on_resource_owner_id"
@@ -98,6 +99,8 @@ ActiveRecord::Schema[7.1].define(version: 2024_08_14_224309) do
     t.datetime "updated_at", null: false
     t.string "bpk"
     t.boolean "temp", default: false
+    t.json "jwks"
+    t.datetime "jwks_updated_at"
     t.index ["uid"], name: "index_oauth_applications_on_uid", unique: true
   end
 

@@ -1,0 +1,1 @@
+curl -s http://localhost:3500/api/data | jq -c '.data'

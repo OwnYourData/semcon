@@ -16,9 +16,10 @@ RUN mkdir -p ${RAILS_ROOT}tmp/pids && \
 COPY Gemfile Gemfile.extend Rakefile $RAILS_ROOT
 COPY config config
 COPY docker/local-gem/*.gem /tmp/
+
 RUN git config --global url."https://".insteadOf git:// && \
 	gem install /tmp/*.gem && \
-	gem update --system # && \
+	gem update --system && \
 	bundle install && \
 	bundle update && \
 #	rake app:update:bin && \
