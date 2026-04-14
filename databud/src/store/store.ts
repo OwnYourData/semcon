@@ -1,6 +1,6 @@
 import { getInstance, soya } from '@/services';
-import { Soya, SoyaDocument } from 'soya-js';
-import { MultiResponse, Paging, Vaultifier, VaultItem, VaultItemsQuery, VaultMeta, VaultMinMeta, VaultPostItem, VaultRepo, VaultSchema, } from 'vaultifier';
+import { SoyaDocument } from 'soya-js';
+import { MultiResponse, Paging, VaultItem, VaultMeta, VaultMinMeta, VaultPostItem, VaultRepo, VaultSchema } from 'vaultifier';
 import Vue from 'vue';
 import Vuex, { Commit } from 'vuex'
 import { ActionType } from './action-type';
@@ -156,22 +156,24 @@ export const getStore = () => {
         commit(MutationType.SET_VAULT_ITEM, undefined);
         commit(MutationType.SET_VAULT_ITEMS_PAGING, undefined);
       },
-      async [ActionType.UPDATE_VAULT_ITEM]({ state, commit, dispatch }, payload: VaultPostItem) {
+      async [ActionType.UPDATE_VAULT_ITEM]({ state }, payload: VaultPostItem) {
         let jsonld: SoyaDocument | undefined = undefined;
         let yaml: string | undefined = undefined;
+
         if (state.vaultItem.language === Language.YAML) {
           yaml = payload.data as string;
           jsonld = await soya.init(yaml);
         }
-        else
+        else {
           jsonld = payload.data;
+        }
 
         await soya.push(jsonld, {
           soya_yaml: yaml,
           meta: payload.meta,
         });
       },
-      async [ActionType.DELETE_VAULT_ITEM]({ state, commit, dispatch }, payload: VaultMeta) {
+      async [ActionType.DELETE_VAULT_ITEM]({ state, commit }, payload: VaultMeta) {
         if (payload.dri)
           await soya.delete(payload.dri);
         else
@@ -208,30 +210,10 @@ export const getStore = () => {
           (store, state) => store.repo.state = state
         );
       },
-      async [ActionType.FETCH_VAULT_ITEMS]({ commit, state }, { page, size, repo, schema, fetchContent }: IFetchVaultItems) {
+      async [ActionType.FETCH_VAULT_ITEMS]({ commit, state }, { schema }: IFetchVaultItems) {
         // reset currently selected vault item if list of vault items is refreshed
         commit(MutationType.SET_VAULT_ITEM, undefined);
         commit(MutationType.SET_CURRENT_SCHEMA, undefined);
-
-        // soyabud: querying for databud renderings is not really meaningful, therefore disabled
-        // if (schema?.dri) {
-        //   try {
-        //     const doc = await soya.pull(schema.dri);
-        //     commit(MutationType.SET_CURRENT_SCHEMA, doc);
-
-        //     const sparql = await soya.getSparqlBuilder(doc);
-        //     const bindings = await sparql.query(`
-        //     PREFIX base: <${doc["@context"]["@base"]}>
-        //     SELECT * WHERE {
-        //         ?base a base:OverlayDataBudRendering .
-        //     }`);
-
-        //     // if there is an overlay for DataBudRendering
-        //     // we want to fetch the whole content
-        //     if (bindings.length > 0)
-        //       fetchContent = true;
-        //   } catch { /* if it goes wrong we don't care */ }
-        // }
 
         await doFetch<MultiResponse<SoyaVaultMeta>>(
           commit,
@@ -270,9 +252,9 @@ export const getStore = () => {
                 }
               };
             }
-            else
+            else {
               throw new Error('Schema and repo are undefined');
-
+            }
           },
           (commit, data) => {
             commit(MutationType.SET_VAULT_ITEMS, data.items);
@@ -281,11 +263,15 @@ export const getStore = () => {
           (store, state) => store.vaultItem.allState = state,
         );
       },
-      async[ActionType.FETCH_VAULT_ITEM]({ commit, state }, payload: SoyaVaultMinMeta) {
+      async [ActionType.FETCH_VAULT_ITEM]({ commit, state }, payload: SoyaVaultMinMeta) {
         await doFetch<SoyaVaultItem>(
           commit,
           async () => {
-            const res = await soya.service.get(`/api/data?id=${payload.id}`, false);
+            // Important:
+            // do not disable auth here. We want the RepoService defaultAuth
+            // from the central SOyA instance to decide whether a bearer token
+            // should be attached.
+            const res = await soya.service.get(`/api/data?id=${payload.id}`);
 
             return {
               id: payload.id,
@@ -304,13 +290,14 @@ export const getStore = () => {
           (store, state) => store.vaultItem.currentState = state,
         )
       },
-      async[ActionType.SET_VAULT_ITEM_LANGUAGE]({ commit, state, dispatch }, payload: Language) {
+      async [ActionType.SET_VAULT_ITEM_LANGUAGE]({ commit, state, dispatch }, payload: Language) {
         commit(MutationType.SET_VAULT_ITEM_LANGUAGE, payload);
+
         // refetch current vault item, if needed
         if (state.vaultItem.current)
           dispatch(ActionType.FETCH_VAULT_ITEM, state.vaultItem.current);
       },
-      async[ActionType.FETCH_SCHEMAS_TITLE]({ commit, state }) {
+      async [ActionType.FETCH_SCHEMAS_TITLE]({ commit, state }) {
         const infos = await soya.info(state.schemaDRI.all.map(x => x.dri));
 
         for (const info of infos) {
@@ -322,7 +309,7 @@ export const getStore = () => {
           }
         }
       },
-      async[ActionType.TOGGLE_UI_IS_FLUID]({ commit, state }) {
+      async [ActionType.TOGGLE_UI_IS_FLUID]({ commit, state }) {
         commit(MutationType.SET_UI_IS_FLUID, !state.ui.isFluid);
       },
     }

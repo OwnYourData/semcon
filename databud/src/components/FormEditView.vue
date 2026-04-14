@@ -73,9 +73,9 @@ import FormView from './FormView.vue';
 import InlineGroup from './InlineGroup.vue';
 import CustomButton from './Button.vue';
 import Spinner from './Spinner.vue';
-import { Soya, SoyaQueryResult } from 'soya-js';
+import { SoyaQueryResult } from 'soya-js';
 import { IStore } from '@/store';
-import { getInstance } from '@/services';
+import { getInstance, soya } from '@/services';
 import { Action, executeAction, getActionsFromConfig } from '@/utils/actions';
 
 interface SoyaStructure {
@@ -204,7 +204,6 @@ export default Vue.extend({
       return this.selectedStructure ? (this.selectedStructure.name || this.selectedStructure.dri) : undefined;
     },
     actions(): Action[] {
-      // TODO: is this any nice?
       return getActionsFromConfig('settings', 'additionalFormActions').filter(x => (x as any).schemaDri === this.schemaDri);
     }
   },
@@ -229,7 +228,7 @@ export default Vue.extend({
         this.suggestItems = [];
       // type at least 3 characters
       else if (value.length >= 3)
-        this.suggestItems = await new Soya().query({ name: value });
+        this.suggestItems = await soya.query({ name: value });
     }
   }
 })

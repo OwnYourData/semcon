@@ -46,7 +46,7 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { setInstance as setVaultifier, initialize as initializeSoya, soya } from './services';
+import { setInstance as setVaultifier, initialize as initializeSoya } from './services';
 import Spinner from './components/Spinner.vue'
 import NavBar from './components/NavBar.vue'
 import Login, { Data as LoginData } from './components/Login.vue'
@@ -57,7 +57,6 @@ import { IStore } from "./store";
 import { ConfigService } from "./services/config-service";
 import { RepoService, Soya } from "soya-js";
 import { Action, ActionMethod } from "./utils/actions";
-import { ActionType } from "./store/action-type";
 
 const isLoginData = (data: any): data is LoginData => {
   const d = data as LoginData;
@@ -121,18 +120,14 @@ export default Vue.extend({
 
       try {
         if (credentials) {
-          // APP_KEY and APP_SECRET based authentication
           if (vw.vaultifier && isLoginData(credentials)) {
             vw.vaultifier.setCredentials(credentials);
             await vw.vaultifier.initialize();
           }
-          // external authentication provider
           else if ((credentials as OAuthExternalProvider).link) {
-            // just redirect to the external oAuth provider
             window.location.href = (credentials as OAuthExternalProvider).link;
             return;
           }
-          // external authentication provider
           else {
             await vw.initialize({
               oAuthType: credentials as OAuthIdentityProvider,
@@ -157,9 +152,9 @@ Try looking into the browser console to gain more insights on the problem.`;
         return;
       }
 
-      // @ts-expect-error Both vaultifier types are incompatible, as one package uses main-build
-      // and the other uses module-build (but technically they have the same types of course)
-      initializeSoya(new Soya({ service: RepoService.fromVaultifier(vaultifier) }));
+      initializeSoya(new Soya({
+        service: RepoService.fromVaultifier(vaultifier as unknown as any, 'optional')
+      }));
 
       try {
         this.vaultSupport = await vaultifier.getVaultSupport();
@@ -171,7 +166,9 @@ Try looking into the browser console to gain more insights on the problem.`;
           try {
             await vaultifier.initialize();
             this.isLoggedIn = await vaultifier.isAuthenticated();
-          } catch { /* vaultifier throws an error if no credentials can be determined */ }
+          } catch {
+            // ignore: vaultifier throws if no credentials can be determined
+          }
         }
 
         this.encryptionSupport = await vaultifier.setEnd2EndEncryption(true);
@@ -269,16 +266,11 @@ Try looking into the browser console to gain more insights on the problem.`;
 
 <style>
 .list-group-item {
-  /* overflow: hidden; */
   text-overflow: ellipsis;
   word-wrap: initial;
 }
 
 .list-group-item:not(.list-group-item--nolink) {
   cursor: pointer;
-}
-
-.list-group-item:not(.active):not(.list-group-item--nolink):hover {
-  background-color: #f0f7ff;
 }
 </style>

@@ -18,7 +18,7 @@ gem "rack-cors"
 gem "oydid"
 gem 'doorkeeper'
 gem 'responders'
-gem 'pagy'
+gem 'pagy', '~> 3.5'
 gem 'rswag'
 gem 'simple_dag'
 gem 'statistics'
