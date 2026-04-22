@@ -17,9 +17,10 @@ COPY config config
 COPY docker/local-gem/*.gem /tmp/
 RUN git config --global url."https://".insteadOf git:// && \
 	gem install /tmp/*.gem && \
+	gem update --system && \
 	bundle install && \
 	bundle update && \
-	rake app:update:bin && \
+#	rake app:update:bin && \
 	ln -s $PWD/script/init.sh /bin/init.sh
 
 COPY . .
