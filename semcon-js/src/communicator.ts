@@ -74,12 +74,24 @@ export class Communicator {
     if (adapter) {
       return this.networkAdapter = adapter;
     } else {
+      // parses the response body as JSON if possible,
+      // otherwise returns the raw text (e.g. YAML or turtle responses)
+      // this mimics axios' behavior, which vaultifier used previously
+      const parseBody = async (res: Response): Promise<any> => {
+        const text = await res.text();
+        try {
+          return JSON.parse(text);
+        } catch {
+          return text;
+        }
+      };
+
       return this.networkAdapter = {
         get: async (url: string, headers?: any) => {
           const res = await fetch(url, { method: 'GET', headers });
           if (!res.ok) throw new Error(`GET ${url} failed: ${res.status}`);
           return {
-            data: await res.json(),
+            data: await parseBody(res),
             headers: res.headers,
             status: res.status,
             request: { url, method: 'GET' }
@@ -93,7 +105,7 @@ export class Communicator {
           });
           if (!res.ok) throw new Error(`POST ${url} failed: ${res.status}`);
           return {
-            data: await res.json(),
+            data: await parseBody(res),
             headers: res.headers,
             status: res.status,
             request: { url, method: 'POST' }
@@ -107,7 +119,7 @@ export class Communicator {
           });
           if (!res.ok) throw new Error(`PUT ${url} failed: ${res.status}`);
           return {
-            data: await res.json(),
+            data: await parseBody(res),
             headers: res.headers,
             status: res.status,
             request: { url, method: 'PUT' }
@@ -120,7 +132,7 @@ export class Communicator {
           });
           if (!res.ok) throw new Error(`DELETE ${url} failed: ${res.status}`);
           return {
-            data: await res.json(),
+            data: await parseBody(res),
             headers: res.headers,
             status: res.status,
             request: { url, method: 'DELETE' }
