@@ -1,4 +1,4 @@
-FROM arm64v8/ruby:3.1-slim
+FROM arm64v8/ruby:3.3-slim
 MAINTAINER "Christoph Fabianek" christoph@ownyourdata.eu
 
 WORKDIR /usr/src/app
@@ -19,8 +19,10 @@ RUN git config --global url."https://".insteadOf git:// && \
 	bundle update
 COPY . .
 
+# rake app:update:bin ist hier bewusst nicht mehr aufgerufen: Rails 7.2
+# kennt die Task nicht mehr (framework.rake hat nur noch app:template und
+# app:templates:copy), und die Binstubs in bin/ liegen ohnehin im Repo.
 RUN bundle update && \
-	rake app:update:bin && \
 	ln -s $PWD/script/init.sh /bin/init.sh
 
 CMD ["./script/init.sh"]

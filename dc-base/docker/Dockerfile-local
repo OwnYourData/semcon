@@ -1,4 +1,4 @@
-FROM ruby:3.2.8
+FROM ruby:3.3.6
 LABEL maintainer="Christoph Fabianek <christoph@ownyourdata.eu>"
 
 WORKDIR /usr/src/app
