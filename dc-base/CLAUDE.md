@@ -66,11 +66,12 @@ Nach jedem Push den Registry-Stand mit `docker buildx imagetools inspect oydeu/d
 
 **Basis und Abhaengigkeiten sind gepinnt (CC-ADR 0015).** `docker/Dockerfile` beginnt mit `FROM ruby:3.3.6@sha256:347edd0c…`; der Digest wird nur in einem eigenen, begruendeten Commit ausgetauscht. `bundle update` steht nicht mehr darin, und `Gemfile.lock` liegt im Build-Kontext — beides gehoert zusammen: ohne die Sperrdatei im Kontext loest `bundle install` frisch auf, und das Streichen von `bundle update` waere wirkungslos bei gleichzeitig erfuelltem Anschein.
 
-**Bau-Protokoll.** Wer baut, traegt hier ein, worauf das Image steht:
+**Bau-Protokoll.** Wer baut, traegt hier ein, worauf das Image steht. Der Eintrag entsteht zwangslaeufig **nach** dem Bau, den er beschreibt: `CLAUDE.md` liegt im Build-Kontext, ein Protokolleintrag aendert also den Quellstand. Der im Eintrag genannte Commit ist der, aus dem gebaut wurde, nicht der, der den Eintrag traegt.
 
 | Tag | Digest des Images | Basis | Quellstand |
 | --- | --- | --- | --- |
 | `260911` | `sha256:c41609c87d83e5222825af1878d791ac1345bcb00f0c127b517debe86b03ff93` | `ruby:3.3.6@sha256:347edd0c70ee08d87de9f01b99de2f14a64cedb5d1bfb38457dfe8cd0bf113c5` | `0bebb5f` auf `feature/soyabud`, Dockerfile noch mit `bundle update`; aufgeloest: oydid 0.9.7, rails 7.2.3.2, json-ld 3.3.2, pagy 3.11.0, rbnacl 7.1.2, rdf 3.3.4, httparty 0.24.2 |
+| `260911a` | `sha256:be6bc6261854b66468aa36381ae58ec51ad04c16afecb841eda5ef2a401c870b` | `ruby:3.3.6@sha256:347edd0c70ee08d87de9f01b99de2f14a64cedb5d1bfb38457dfe8cd0bf113c5` | `a763ba1` auf `feature/soyabud`, erster gepinnter Bau: Basis per Digest, kein `bundle update`, Aufloesung aus `Gemfile.lock`. Geprueft: die aus dem Image gelesene `Gemfile.lock` ist mit der versionierten identisch, 39 Tests gruen |
 
 **Der Sprung auf `oydid` 0.9.7 ist nicht mit dem Pin gekommen, sondern vor ihm.** `oydeu/dc-eeg:260911`, das Image im Nikko-Pod, traegt 0.9.7 — hereingekommen ueber den ungepinnten Bau vom 11.09.2026, nicht ueber eine Entscheidung. Der Pin fuehrt 0.9.7 also nicht ein, er schreibt einen laufenden Zustand fest. Das ist der konkrete Vorfall, auf den CC-ADR 0015 antwortet, und der Grund, warum `bundle update` aus dem Dockerfile verschwunden ist.
 
