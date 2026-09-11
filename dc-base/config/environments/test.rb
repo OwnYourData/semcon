@@ -25,7 +25,12 @@ Rails.application.configure do
   # Show full error reports and disable caching.
   config.consider_all_requests_local       = true
   config.action_controller.perform_caching = false
-  config.cache_store = :null_store
+
+  # Not :null_store. DID resolution is cached, and the conformance vectors get
+  # their DID documents in by priming that cache - with a null store the
+  # priming would silently do nothing and every vector would fail on an
+  # unresolvable DID.
+  config.cache_store = :memory_store
 
   # Raise exceptions instead of rendering exception templates.
   config.action_dispatch.show_exceptions = false

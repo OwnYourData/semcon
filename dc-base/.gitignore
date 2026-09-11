@@ -28,3 +28,16 @@
 
 /config/credentials/production.key
 config/credentials/production.key
+
+# Das .gitignore des Monorepos ~/dev/semcon schliesst in Zeile 72 mit dem
+# blossen Muster "test" jedes so benannte Verzeichnis auf jeder Ebene aus -
+# damit war die gesamte Testsuite dieses Repos unversioniert, ohne dass es
+# jemandem aufgefallen waere. Die folgende Zeile holt das Verzeichnis hier
+# wieder herein; die vier Kommando-Notizen darunter bleiben ausgeschlossen.
+!/test/
+
+# Persoenliche Kommando-Notizen mit echten Zugangsdaten (siehe CLAUDE.md, Abschnitt Sicherheit)
+/test/cmd.txt
+/test/cmd_babelfish.txt
+/test/cmd_paging.txt
+/test/init.txt
