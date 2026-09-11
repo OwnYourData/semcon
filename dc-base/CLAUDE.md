@@ -60,6 +60,44 @@ bash build.sh --local          gegen lokal gebaute semcon- und oydid-Gems aus ..
 bash build.sh --arm            arm64v8-Variante
 ```
 
+**`build.sh` vergibt nur `latest`.** Den datierten, unveraenderlichen Tag, den CC-ADR 0015 fuer jeden Bau verlangt, setzt du danach von Hand — `docker tag oydeu/dc-base:latest oydeu/dc-base:YYMMDD`, dann erst `docker push` des datierten Tags und danach der von `latest`. Der unveraenderliche Zeiger soll existieren, bevor der bewegliche umgehaengt wird. Deployments referenzieren ausschliesslich den datierten Tag.
+
+Nach jedem Push den Registry-Stand mit `docker buildx imagetools inspect oydeu/dc-base:<tag>` gegenlesen, nicht der Push-Quittung glauben: die ist eine Behauptung des Clients. Bricht ein Push mit `net/http: timeout awaiting response headers` ab, denselben Befehl allein wiederholen — abgeschlossene Schichten werden nicht erneut uebertragen —, und ihn nicht in eine `&&`-Kette haengen, sonst reisst der Abbruch den naechsten Schritt mit.
+
+**Basis und Abhaengigkeiten sind gepinnt (CC-ADR 0015).** `docker/Dockerfile` beginnt mit `FROM ruby:3.3.6@sha256:347edd0c…`; der Digest wird nur in einem eigenen, begruendeten Commit ausgetauscht. `bundle update` steht nicht mehr darin, und `Gemfile.lock` liegt im Build-Kontext — beides gehoert zusammen: ohne die Sperrdatei im Kontext loest `bundle install` frisch auf, und das Streichen von `bundle update` waere wirkungslos bei gleichzeitig erfuelltem Anschein.
+
+**Bau-Protokoll.** Wer baut, traegt hier ein, worauf das Image steht:
+
+| Tag | Digest des Images | Basis | Quellstand |
+| --- | --- | --- | --- |
+| `260911` | `sha256:c41609c87d83e5222825af1878d791ac1345bcb00f0c127b517debe86b03ff93` | `ruby:3.3.6@sha256:347edd0c70ee08d87de9f01b99de2f14a64cedb5d1bfb38457dfe8cd0bf113c5` | `0bebb5f` auf `feature/soyabud`, Dockerfile noch mit `bundle update`; aufgeloest: oydid 0.9.7, rails 7.2.3.2, json-ld 3.3.2, pagy 3.11.0, rbnacl 7.1.2, rdf 3.3.4, httparty 0.24.2 |
+
+**Der Sprung auf `oydid` 0.9.7 ist nicht mit dem Pin gekommen, sondern vor ihm.** `oydeu/dc-eeg:260911`, das Image im Nikko-Pod, traegt 0.9.7 — hereingekommen ueber den ungepinnten Bau vom 11.09.2026, nicht ueber eine Entscheidung. Der Pin fuehrt 0.9.7 also nicht ein, er schreibt einen laufenden Zustand fest. Das ist der konkrete Vorfall, auf den CC-ADR 0015 antwortet, und der Grund, warum `bundle update` aus dem Dockerfile verschwunden ist.
+
+Gemessen am 11.09.2026, `bundle list` im jeweiligen Image:
+
+| Image | `oydid` | `rails` |
+| --- | --- | --- |
+| `oydeu/dc-base:260222` | 0.6.0 | 7.2.3 |
+| `oydeu/dc-base:260911` | 0.9.7 | 7.2.3.2 |
+| `oydeu/dc-eeg:260911` (Nikko) | 0.9.7 | 7.2.3.2 |
+
+**Woher 0.6.1 kommt: es gibt zwei Abhaengigkeits-Regime.** Im Repo liegt `docker/local-gem/oydid-0.6.1.gem` (neben `semcon-0.0.2.gem`, beide vom 3. Juli). `build.sh --local` baut ueber `docker/Dockerfile-local`, und das macht `gem install /tmp/*.gem` aus genau diesem Verzeichnis. Der berichtete Pod-Stand 0.6.1 ist also keine Erfindung, sondern ein `--local`-Bau. Wer `--local` baut, umgeht die Registry und haengt an einer eingecheckten Binaerdatei; wer ohne baut, bekam bis zum Pin, was `bundle update` gerade fand. **Zwei Wege, zwei Staende, kein gemeinsamer Nenner** — das ist der Grund, warum 0.5.6, 0.6.0, 0.6.1, 0.6.5 und 0.9.7 alle gleichzeitig "richtig" sein konnten.
+
+Der Pin greift bisher nur am ersten Weg. `Dockerfile-local` und die beiden arm-Varianten tragen weiterhin `bundle update` und ein bewegliches `FROM`; dort ist CC-ADR 0015 noch nicht umgesetzt.
+
+**Zwei Zahlen ohne Artefakt bleiben.** `Gemfile.lock` nannte bis zum Pin 0.5.6 (Stand 3. Juli), `dc-pod/docs/Delegation-Implementation.md` nennt 0.6.5. Zu keiner der beiden existiert ein auffindbares Image oder Gem im Repo. Vor dem datierten Tag hinterliess kein Zwischenstand ein wiederfindbares Artefakt. Keine der beiden Zahlen wird uebernommen; sie bleiben als unbelegt vermerkt.
+
+**Abnahme des `oydid`-Sprungs, 11.09.2026: bestanden.** Geprueft wurde gegen die oeffentliche VDR, je einmal im Image mit 0.9.7 und im Februar-Image `260222` mit 0.6.0, mit drei DIDs — der Nikko-DID in Kurz- und Langform und `did:oyd:zQmX493GLVxE8Wasc8ANTdZmq4YUsvdk5j6Daf7iQaPECt6`, der aeltesten produktiv genutzten Controller-DID in `pod-dpp`, registriert am 19.08.2026 und damit von einer 0.6.x geschrieben.
+
+Ergebnis: `Oydid.read` liefert unter **beiden** Versionen fuer alle drei ein Dokument ohne Fehlertext, und `DidDocument.from_oydid` bildet es unter 0.9.7 in allen drei Faellen auf eine `verificationMethod` vom Typ `Ed25519VerificationKey2020` mit `z6Mk`-Praefix und brauchbarem 32-Byte-Schluessel ab — bei der Nikko-DID auf den erwarteten `z6MkfFirVBY3xsTndavLtxcvukuKm3F8iDwkMUqccSs8MhGQ`, bei der alten auf `z6Mkipe8M7tToZfituNY5NddD85o6xwqXdeG1S1FEZACBHYs`. 0.9.7 liest also auch Bestandsdokumente.
+
+**`DidResolver.resolve` ist auf einem Mac unter amd64-Emulation nicht pruefbar.** Ein `Oydid.read` braucht dort 7,5 bis 15 Sekunden — unter 0.6.0 genauso wie unter 0.9.7 —, und `DidResolver::TIMEOUT` ist 5 Sekunden. Der Resolver laeuft dort also zwangslaeufig in `timeout resolving` und gibt `nil`. Das ist eine Aussage ueber die Emulation, nicht ueber die Bibliothek und nicht ueber den Resolver; das Budget bleibt, wo es ist. Wer die Resolver-Ebene wirklich messen will, misst sie im Cluster.
+
+**Vor dem Rollout offen — nicht durchrutschen lassen.** Der Pin der Gem-Aufloesung hebt `doorkeeper` von 5.9.0 auf 5.9.7. `dc-base` haengt an zwei Doorkeeper-Erweiterungspunkten, die keine oeffentliche API sind: `grant_flows` ueber `DC_GRANT_FLOWS` und das um ein `DPoP`-Lambda erweiterte `access_token_methods`. **Die neununddreissig Tests dieses Repos fassen keinen davon an.** Ebenfalls im Pin: `connection_pool` 2.5.5 auf 3.0.2 und `erb` 4.0.4 auf 6.0.7, zwei Hauptversionsspruenge. Der `oydid`-Sprung ist abgenommen, siehe oben; diese drei sind es nicht.
+
+Ob dieser Sprung wie der von `oydid` bereits in Betrieb ist, ist offen — fuer `oydeu/dc-eeg:260911` ist die `doorkeeper`-Version nicht erhoben. Der Nachweis sind so oder so die zweiundzwanzig Konformitaets-Vektoren in `dc-pod`, gebaut auf der neuen Basis. Pinnen und Ausrollen sind zwei Akte: der Pin stellt niemandem etwas hin, der Rollout schon, und die Vektoren laufen dazwischen. Solange diese Zeile hier steht, ist der Nachweis nicht erbracht — wer ausrollt, streicht sie oder laesst es bleiben.
+
 **Signaturaenderungen an `Jws.verify` rollen in einer Welle mit `dc-pod`.** Ein neues `dc-base` mit einem zusaetzlichen Pflichtargument gegen ein altes `dc-pod`, das es nicht mitgibt, bricht sofort und an jeder Aufrufstelle. Erst beide Repos aendern, dann bauen, dann gemeinsam ausrollen.
 
 **Reihenfolge beim Ausrollen:** `dc-base` muss in der Registry stehen, bevor `dc-pod` gebaut wird, und `dc-pod`, bevor ein abgeleiteter Pod gebaut wird. `buildx` zieht sein Basis-Image aus der Registry, nicht aus dem lokalen Docker-Speicher — wer nur lokal baut und dann den abgeleiteten Pod pusht, deployt stillschweigend den alten Stand.

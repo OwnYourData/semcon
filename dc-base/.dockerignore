@@ -2,7 +2,6 @@ kubernetes/
 pytest/
 test/
 tmp/
-Gemfile.lock
 .dockerignore
 .gitattributes
 .gitignore
