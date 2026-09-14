@@ -42,3 +42,7 @@ config/credentials/production.key
 /test/cmd_babelfish.txt
 /test/cmd_paging.txt
 /test/init.txt
+
+# Python-Bytecode aus den pytest-Laeufen.
+__pycache__/
+*.pyc

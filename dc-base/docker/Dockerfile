@@ -3,10 +3,14 @@
 # am 11.09.2026 mit 'docker buildx imagetools inspect ruby:3.3.8'. Er wird
 # beim bewussten Anheben der Basis ausgetauscht, in einem eigenen Commit.
 FROM ruby:3.3.8@sha256:3e0e01e30c20e1e3546c696ac8d7226fc93a34bbbd0b29eb6edb97ca49bf2ba8
-MAINTAINER "Christoph Fabianek" christoph@ownyourdata.eu
-
+LABEL org.opencontainers.image.authors="Christoph Fabianek <christoph@ownyourdata.eu>"
 WORKDIR /usr/src/app
-ENV RAILS_ROOT $WORKDIR
+# WORKDIR setzt keine gleichnamige Variable. Hier stand deshalb jahrelang
+# 'ENV RAILS_ROOT $WORKDIR' - und damit RAILS_ROOT auf den leeren String,
+# weshalb das mkdir darunter /tmp/pids anlegte statt tmp/pids im
+# Anwendungsverzeichnis. Aufgefallen ist es nie, weil niemand RAILS_ROOT
+# sonst liest und Rails sein tmp/ beim Start selbst anlegt.
+ENV RAILS_ROOT=/usr/src/app
 RUN mkdir -p $RAILS_ROOT/tmp/pids && \
 	apt-get update && \
 	apt-get install -y --no-install-recommends \
