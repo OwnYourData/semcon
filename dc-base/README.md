@@ -22,3 +22,11 @@ Things you may want to cover:
 * Deployment instructions
 
 * ...
+
+## Documentation
+
+* [Resolving foreign DIDs and verifying signed statements](docs/DID-and-JWS.md)
+  — what `app/services/` provides (`DidResolver`, `DidDocument`, `Jws`, `Jwk`),
+  the caching discipline it relies on, and the two extension points in the
+  Doorkeeper configuration that derived applications use to add a grant flow
+  and to accept the `DPoP` authorization scheme.

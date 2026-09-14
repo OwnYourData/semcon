@@ -43,6 +43,12 @@ Rails.application.configure do
   # Use a different cache store in production.
   # config.cache_store = :mem_cache_store
 
+  # Set explicitly rather than relying on the file store default: DID
+  # resolution caches here (positive 300 s, negative 60 s), and that has to be
+  # a store whose expiry actually works. Per process, so each replica keeps its
+  # own - which only shortens the window in which a revoked DID stays cached.
+  config.cache_store = :memory_store, { size: 32.megabytes }
+
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).
   config.i18n.fallbacks = true

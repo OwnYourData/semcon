@@ -1,0 +1,51 @@
+
+echo '[{
+    "id":"#semcon",
+    "type": "DecentralizedWebNode",
+    "serviceEndpoint": {
+      "nodes": ["https://honey-oc3.data-container.net"]
+    }
+  }]' | ~/semcon/oydid/cli/oydid.rb create -l https://honey-oc3.data-container.net -z 1 --doc-pwd 1 --rev-pwd 1
+# created did:oyd:zQmUPfENuoTg7Tqu7FWfLGRty4R1mVpFstNbZfF77zByNpq%40honey-oc3.data-container.net
+
+Doorkeeper::Application.create!({name: 'master', uid: 'rkgYEN5QXmsFcwbH-awWoo9Q5BJd6vdGoyzRHI0lOzs', secret: 'AoaoR9-Aj7woafUW7hnARWVbNqaBxINiqteyMDMuboA', redirect_uri: 'urn:ietf:wg:oauth:2.0:oob', scopes: 'admin write read'})
+
+Doorkeeper::Application.create!({name: 'oydid', redirect_uri: 'urn:ietf:wg:oauth:2.0:oob', scopes: 'write read'})
+
+
+echo '{"my":"payload"}' | semcon write zQmUPfENuoTg7Tqu7FWfLGRty4R1mVpFstNbZfF77zByNpq@honey-oc3.data-container.net
+# error
+
+export APP_KEY="rkgYEN5QXmsFcwbH-awWoo9Q5BJd6vdGoyzRHI0lOzs"
+export APP_SECRET="AoaoR9-Aj7woafUW7hnARWVbNqaBxINiqteyMDMuboA"
+export TOKEN=`curl -s -d grant_type=client_credentials -d client_id=$APP_KEY -d client_secret=$APP_SECRET -d scope=admin -X POST https://honey-oc3.data-container.net/oauth/token | jq -r '.access_token'`
+
+echo '{"hello":"world"}' | ./semcon.rb write --token $TOKEN did:oyd:zQmUPfENuoTg7Tqu7FWfLGRty4R1mVpFstNbZfF77zByNpq@honey-oc3.data-container.net
+
+
+curl -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '[{"data":"value"}]' -X POST http://localhost:4000/api/data
+
+
+echo '[{
+    "id":"#semcon",
+    "type": "DecentralizedWebNode",
+    "serviceEndpoint": {
+      "nodes": ["https://dec-support.data-container.net"]
+    }
+  }]' | ~/dev/oydid/cli/oydid.rb create -l https://dec-support.data-container.net --doc-pwd pwd1 --rev-pwd pwd2 --ts 1
+
+# created did:oyd:zQmboMs8qaPbS7oFr8kNggxhKNmfsCKzvY6np3a7JMw9FBe@https://dec-support.data-container.net
+
+Doorkeeper::Application.create!({name: 'master', uid: 'rkgYEN5QXmsFcwbH-awWoo9Q5BJd6vdGoyzRHI0lOZs', secret: 'AoaoR9-Aj7woafUW7hnARWVbNqaBxINiqteyMDMuBoA', redirect_uri: 'urn:ietf:wg:oauth:2.0:oob', scopes: 'admin write read'})
+
+Doorkeeper::Application.create!({name: 'oydid', redirect_uri: 'urn:ietf:wg:oauth:2.0:oob', scopes: 'write read'})
+
+
+Store.new(item: {"username":"john"}).save
+
+export APP_KEY=rkgYEN5QXmsFcwbH-awWoo9Q5BJd6vdGoyzRHI0lOZs
+export APP_SECRET=AoaoR9-Aj7woafUW7hnARWVbNqaBxINiqteyMDMuBoA
+export TOKEN=`curl -s -d grant_type=client_credentials -d client_id=$APP_KEY -d client_secret=$APP_SECRET -d scope=admin -X POST https://dec-support.data-container.net/oauth/token | jq -r '.access_token'`
+curl -H "Authorization: Bearer $TOKEN" https://dec-support.data-container.net/api/active
+
+curl -H "Authorization: Bearer $TOKEN" https://dec-support.data-container.net/api/data?dri=zQmSpkGKmRQHjNuwCJ5vQTkxm81igGC96oCWQ3tWSHE5iG2

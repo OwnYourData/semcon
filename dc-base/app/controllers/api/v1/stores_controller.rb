@@ -166,10 +166,6 @@ module Api
                     end
                 end
 
-                if AuthMode.did? && doorkeeper_token.auth_method == OauthAuthMethods::PRIVATE_KEY_JWT
-                    authorize_stores_by_did_delegation!(@store) or return
-                end
-
                 if @store.nil?
                     render json: {"error": "not found"},
                            status: 404
@@ -507,27 +503,6 @@ module Api
                        status: 200
             end
 
-            private
-
-            def authorize_stores_by_did_delegation!(stores)
-              request_did = doorkeeper_token.application.uid.to_s
-              records = stores.is_a?(ActiveRecord::Relation) ? stores : Array(stores)
-              delegation_cache = {}
-
-              records.each do |rec|
-                record_did = rec.meta.is_a?(Hash) ? rec.meta["did"].to_s : JSON.parse(rec.meta)["did"] rescue nil
-                ok = delegation_cache.fetch(record_did) do
-                  delegation_cache[record_did] =
-                    DidCapabilityDelegation.allowed?(request_did:, record_did:)
-                end
-                unless ok
-                  head :forbidden
-                  return false
-                end
-              end
-
-              true
-            end
         end
     end
 end

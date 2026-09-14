@@ -13,9 +13,9 @@
 
 # Instance variables
 # See https://ddnexus.github.io/pagy/docs/api/pagy#instance-variables
-Pagy::DEFAULT[:page]   = 1                                  # default
-Pagy::DEFAULT[:items]  = 20                                 # default
-Pagy::DEFAULT[:outset] = 0                                  # default
+Pagy::VARS[:page]   = 1                                  # default
+Pagy::VARS[:items]  = 20                                 # default
+Pagy::VARS[:outset] = 0                                  # default
 
 
 # Other Variables
@@ -89,7 +89,7 @@ require 'pagy/extras/array'
 # Headers extra: http response headers (and other helpers) useful for API pagination
 # See http://ddnexus.github.io/pagy/extras/headers
 require 'pagy/extras/headers'
-Pagy::DEFAULT[:headers] = { page: 'Current-Page',
+Pagy::VARS[:headers] = { page: 'Current-Page',
                            items: 'Page-Items',
                            count: 'Total-Count',
                            pages: 'Total-Pages' }     # default
@@ -247,4 +247,4 @@ Pagy::DEFAULT[:headers] = { page: 'Current-Page',
 
 
 # When you are done setting your own default freeze it, so it will not get changed accidentally
-Pagy::DEFAULT.freeze
+Pagy::VARS.freeze

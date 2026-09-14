@@ -256,11 +256,7 @@ Doorkeeper.configure do
   # Check out https://github.com/doorkeeper-gem/doorkeeper/wiki/Changing-how-clients-are-authenticated
   # for more information on customization
   #
-  if AuthMode.did?
-    client_credentials :from_private_key_jwt, :from_basic, :from_params
-  else
-    client_credentials :from_basic, :from_params
-  end  
+  # client_credentials :from_basic, :from_params
 
   # Change the way access token is authenticated from the request object.
   # By default it retrieves first from the `HTTP_AUTHORIZATION` header, then
@@ -269,6 +265,23 @@ Doorkeeper.configure do
   # for more information on customization
   #
   # access_token_methods :from_bearer_authorization, :from_access_token_param, :from_bearer_param
+  #
+  # The three stock methods plus the DPoP scheme of RFC 9449: a resource
+  # request presents its token as `Authorization: DPoP <token>`, and
+  # +from_bearer_authorization+ only matches /^Bearer /i - without the lambda
+  # below such a request never reaches the token lookup at all.
+  # +Doorkeeper::OAuth::Token.from_request+ accepts anything that responds to
+  # #call, so no monkey patch is needed.
+  #
+  # Recognising the scheme is generic; what a DPoP proof has to satisfy is
+  # decided one layer up, in the extension that issues bound tokens.
+  access_token_methods :from_bearer_authorization,
+                       :from_access_token_param,
+                       :from_bearer_param,
+                       ->(request) {
+                         header = request.authorization.to_s
+                         header.sub(/\ADPoP /i, "") if header.match?(/\ADPoP /i)
+                       }
 
   # Forces the usage of the HTTPS protocol in non-native redirect uris (enabled
   # by default in non-development environments). OAuth2 delegates security in
@@ -353,7 +366,16 @@ Doorkeeper.configure do
   #   https://datatracker.ietf.org/doc/html/rfc6819#section-4.4.2
   #   https://datatracker.ietf.org/doc/html/rfc6819#section-4.4.3
   #
-  grant_flows %w[client_credentials]
+  # grant_flows %w[authorization_code client_credentials]
+  #
+  # Extension point, in the spirit of Gemfile.extend and config/routes/extend.rb:
+  # a derived application registers its own flow with
+  # Doorkeeper::GrantFlow.register(...) and names it in DC_GRANT_FLOWS. An
+  # unknown name is dropped silently by Doorkeeper (Config#enabled_grant_flows
+  # compacts what the registry does not know), so a typo disables the flow
+  # rather than breaking the boot - which is why the flow belongs in a test.
+  grant_flows(%w[authorization_code client_credentials] +
+              ENV.fetch("DC_GRANT_FLOWS", "").split(",").map(&:strip).reject(&:empty?))
 
   # Allows to customize OAuth grant flows that +each+ application support.
   # You can configure a custom block (or use a class respond to `#call`) that must
