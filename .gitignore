@@ -103,3 +103,7 @@ pnpm-debug.log*
 *.njsproj
 *.sln
 *.sw?
+
+# Kommando-Notizen mit echten Zugangsdaten, und das tmp-Verzeichnis des Gems.
+/cli/test/cmd.txt
+/ruby-gem/tmp/
